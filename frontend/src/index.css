@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --color-vivid: #ff4d8d;
+  --color-vivid-dark: #e8367a;
+  --color-vivid-light: #fff0f5;
+  --color-vivid-muted: #fce7f0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8f9fb;
+  color: #0f172a;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn-vivid {
+  @apply bg-[#ff4d8d] text-white font-semibold rounded-full px-6 py-2.5
+    hover:bg-[#e8367a] transition-all shadow-sm hover:shadow-md active:scale-[0.98];
+}
+
+.btn-vivid-outline {
+  @apply border-2 border-[#ff4d8d] text-[#ff4d8d] font-semibold rounded-full px-6 py-2.5
+    hover:bg-[#fff0f5] transition-all;
+}
+
+.input-vivid {
+  @apply w-full bg-[#f5f5f7] border-0 rounded-full px-5 py-3 text-sm
+    focus:outline-none focus:ring-2 focus:ring-[#ff4d8d]/30 placeholder:text-gray-400;
+}
+
+.card-vivid {
+  @apply bg-white rounded-[1.75rem] shadow-[0_4px_24px_rgba(15,23,42,0.06)]
+    hover:shadow-[0_8px_32px_rgba(15,23,42,0.08)] transition-shadow duration-300;
+}
+
+.pill-vivid {
+  @apply px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap;
+}
+
+.pill-vivid-active {
+  @apply bg-[#ff4d8d] text-white shadow-md shadow-[#ff4d8d]/25;
+}
+
+.pill-vivid-inactive {
+  @apply bg-white text-gray-600 border border-gray-100 hover:border-[#ff4d8d]/30 hover:text-[#ff4d8d];
+}
+
+.table-responsive {
+  @apply overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0;
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(1rem); }
+  to { opacity: 1; transform: translateX(0); }
+}

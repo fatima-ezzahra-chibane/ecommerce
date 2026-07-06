@@ -1,0 +1,6 @@
+backend/vendor/
+backend/.env
+backend/ecommerce
+frontend/node_modules/
+frontend/dist/
+mysql_data/

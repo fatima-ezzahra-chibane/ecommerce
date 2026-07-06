@@ -1,0 +1,373 @@
+{
+  "info": {
+    "name": "Vivid E-Commerce API",
+    "description": "Collection API v1 — importer avec l'environnement Vivid Local",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api/v1" }
+  ],
+  "item": [
+    {
+      "name": "1. Public",
+      "item": [
+        {
+          "name": "Liste produits",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/products?per_page=12"
+          }
+        },
+        {
+          "name": "Détail produit",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/products/{{product_id}}"
+          }
+        },
+        {
+          "name": "Catégories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/categories"
+          }
+        },
+        {
+          "name": "Avis produit (public)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/products/{{product_id}}/reviews"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"phone\": \"0600000000\"\n}"
+            },
+            "url": "{{base_url}}/register"
+          }
+        },
+        {
+          "name": "Login Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.environment.set('token', j.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@shop.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": "{{base_url}}/login"
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.environment.set('admin_token', j.token);",
+                  "  pm.environment.set('token', j.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@shop.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": "{{base_url}}/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/me",
+            "description": "Utilise la variable token (remplie par Login Client ou Login Admin)."
+          }
+        },
+        {
+          "name": "Me (token admin sans écraser client)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": "{{base_url}}/me",
+            "description": "Lit /me avec admin_token seulement — utile si vous gardez token = client et admin_token = admin en parallèle."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/logout"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@shop.com\"\n}"
+            },
+            "url": "{{base_url}}/forgot-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Panier",
+      "item": [
+        {
+          "name": "Voir panier",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/cart"
+          }
+        },
+        {
+          "name": "Ajouter au panier",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 1\n}"
+            },
+            "url": "{{base_url}}/cart"
+          }
+        },
+        {
+          "name": "Modifier quantité",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 2\n}" },
+            "url": "{{base_url}}/cart/{{cart_item_id}}"
+          }
+        },
+        {
+          "name": "Supprimer ligne",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/cart/{{cart_item_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Favoris",
+      "item": [
+        {
+          "name": "Liste favoris",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/wishlist"
+          }
+        },
+        {
+          "name": "Ajouter favori",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": 1\n}" },
+            "url": "{{base_url}}/wishlist"
+          }
+        },
+        {
+          "name": "Retirer favori",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/wishlist/{{product_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Commandes",
+      "item": [
+        {
+          "name": "Passer commande",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_address\": \"123 Avenue Hassan II, Casablanca\",\n  \"payment_method\": \"card\",\n  \"coupon_code\": \"WELCOME10\"\n}"
+            },
+            "url": "{{base_url}}/orders"
+          }
+        },
+        {
+          "name": "Mes commandes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/orders"
+          }
+        },
+        {
+          "name": "Détail commande",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/orders/{{order_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Admin",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": "{{base_url}}/admin/dashboard"
+          }
+        },
+        {
+          "name": "Liste produits admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": "{{base_url}}/admin/products"
+          }
+        },
+        {
+          "name": "Créer produit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 1,\n  \"name\": \"Produit Test API\",\n  \"description\": \"Créé via Postman\",\n  \"price\": 99.99,\n  \"stock\": 10,\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{base_url}}/admin/products"
+          }
+        },
+        {
+          "name": "Changer statut commande",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"processing\"\n}" },
+            "url": "{{base_url}}/admin/orders/{{order_id}}/status"
+          }
+        }
+      ]
+    }
+  ]
+}

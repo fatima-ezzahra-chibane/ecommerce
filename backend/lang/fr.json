@@ -1,0 +1,11 @@
+{
+    "The given data was invalid.": "Les données fournies sont invalides.",
+    "Unauthenticated.": "Non authentifié. Veuillez vous connecter.",
+    "Forbidden": "Accès interdit.",
+    "Not Found": "Ressource introuvable.",
+    "Page Expired": "Page expirée. Veuillez actualiser.",
+    "Server Error": "Erreur serveur. Veuillez réessayer.",
+    "Too Many Attempts.": "Trop de tentatives. Veuillez réessayer plus tard.",
+    "(and :count more error)": "(et :count autre erreur)",
+    "(and :count more errors)": "(et :count autres erreurs)"
+}
