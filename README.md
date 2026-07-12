@@ -28,15 +28,15 @@ docker compose up -d --no-build
 |-----|---------|
 | http://localhost:5173 | React (boutique) |
 | http://localhost:8080/api/v1 | API REST |
-| http://localhost:8081 | PhpMyAdmin (BDD) |
+| http://localhost:8082 | PhpMyAdmin (BDD) |
 
 ## Accès à la base de données
 
 Les conteneurs Docker doivent être démarrés (`docker compose up -d` ou `./setup.sh`).
 
-### PhpMyAdmin (port 8081, démarré par défaut)
+### PhpMyAdmin (port 8082, démarré par défaut)
 
-1. Ouvre **http://localhost:8081**
+1. Ouvre **http://localhost:8082**
 2. Si un écran de connexion s’affiche :
    - **Serveur** : `mysql`
    - **Utilisateur** : `ecommerce`
@@ -164,13 +164,77 @@ Interface graphique : `docker compose exec frontend npm run cy:open`
 
 Fichier : `.github/workflows/ci.yml`
 
-Prochaine étape : **Phase 3** — Application mobile React Native.
+## Phase 3 — Mobile React Native (terminée)
+
+| Livrable | Statut |
+|----------|--------|
+| App Expo (`mobile/`) | OK |
+| Auth Sanctum + AsyncStorage | OK |
+| Boutique, panier, checkout, commandes, profil | OK |
+| Favoris, avis, recherche/filtres | OK |
+| Même API Laravel (`/api/v1`) | OK |
+
+```bash
+cd mobile
+chmod +x start.sh
+API_HOST_IP=VOTRE_IP ./start.sh
+```
+
+Voir [`mobile/README.md`](mobile/README.md) pour l'URL API selon émulateur ou téléphone.
+
+## Phase 4 — Intelligence artificielle (terminée)
+
+| Livrable | Statut |
+|----------|--------|
+| **Computer vision** (Python + OpenCV ORB) | OK |
+| Recherche photo → **1 produit identique ou rien** | OK |
+| Chatbot assistant (local + OpenAI optionnel) | OK |
+| Recommandations produits | OK |
+| Web + mobile + API `/api/v1/ai/*` | OK |
+| Tests PHPUnit `AiTest` | OK |
+
+### Computer vision (recherche par photo)
+
+Microservice **Python** (`cv-service/`) avec **OpenCV ORB** — pas d'API cloud pour la vision.
+
+1. Indexe les images du catalogue : `docker compose exec backend php artisan products:index-visuals --fresh`
+2. L'utilisateur envoie une photo
+3. Le service compare les descripteurs visuels (ORB + ratio test de Lowe)
+4. **Résultat strict** : le produit exact du catalogue, ou **liste vide**
+
+```bash
+docker compose up -d --build cv-service
+docker compose exec backend php artisan products:index-visuals --fresh
+```
+
+**Test démo :** enregistrez l'image d'un produit depuis la boutique, puis uploadez **la même image** via « Même produit (photo) ».
+
+### Chatbot OpenAI (optionnel)
+
+```env
+OPENAI_API_KEY=sk-...
+```
+
+Sans clé : chatbot **local** (FAQ) toujours actif.
+
+### Endpoints IA
+
+| Méthode | URL | Description |
+|---------|-----|-------------|
+| GET | `/api/v1/ai/status` | État CV + chatbot |
+| POST | `/api/v1/ai/chat` | Chatbot |
+| GET | `/api/v1/ai/recommendations` | Recommandations |
+| GET | `/api/v1/products/{id}/recommendations` | Produits similaires |
+| POST | `/api/v1/ai/search-image` | **CV** — 0 ou 1 produit (multipart) |
+
+Prochaine étape : **Phase 5** — Paiement Stripe.
 
 ## Structure
 
 ```
 ├── backend/          Laravel API
 ├── frontend/         React SPA
+├── mobile/           React Native (Expo)
 ├── docker/           Dockerfiles + Nginx
 ├── docs/             Documentation
 └── docker-compose.yml

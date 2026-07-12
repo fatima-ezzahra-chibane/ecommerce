@@ -53,6 +53,18 @@ export const orderService = {
   get: (id) => api.get(`/orders/${id}`),
 };
 
+export const aiService = {
+  status: () => api.get('/ai/status'),
+  chat: (data) => api.post('/ai/chat', data),
+  recommendations: (params) => api.get('/ai/recommendations', { params }),
+  productRecommendations: (productId) => api.get(`/products/${productId}/recommendations`),
+  searchImage: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return api.post('/ai/search-image', fd);
+  },
+};
+
 export const adminService = {
   dashboard: () => api.get('/admin/dashboard'),
   products: (params) => api.get('/admin/products', { params }),

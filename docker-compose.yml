@@ -4,14 +4,18 @@ services:
     container_name: ecommerce-backend
     volumes:
       - ./backend:/var/www/html
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     depends_on:
       mysql:
+        condition: service_healthy
+      cv-service:
         condition: service_healthy
     environment:
       DB_HOST: mysql
       DB_DATABASE: ecommerce
       DB_USERNAME: ecommerce
       DB_PASSWORD: secret
+      CV_SERVICE_URL: http://cv-service:8090
 
   nginx:
     image: nginx:alpine
@@ -62,7 +66,7 @@ services:
     image: phpmyadmin:5.2
     container_name: ecommerce-phpmyadmin
     ports:
-      - "8081:80"
+      - "8082:80"
     environment:
       PMA_HOST: mysql
       PMA_USER: ecommerce
@@ -71,5 +75,25 @@ services:
       mysql:
         condition: service_healthy
 
+  cv-service:
+    build: ./cv-service
+    container_name: ecommerce-cv
+    ports:
+      - "8090:8090"
+    environment:
+      CV_MIN_GOOD_MATCHES: 10
+      CV_MATCH_RATIO: 0.8
+      CV_MIN_CONFIDENCE_GAP: 3
+      CV_MAX_IMAGE_DIM: 800
+    volumes:
+      - cv_index_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 volumes:
   mysql_data:
+  cv_index_data:

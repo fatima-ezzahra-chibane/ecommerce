@@ -3,16 +3,21 @@
 ## Vue d'ensemble
 
 ```
-┌─────────────┐     HTTP/JSON      ┌─────────────┐     FastCGI     ┌─────────────┐
-│   React     │ ─────────────────► │   Nginx     │ ──────────────► │  Laravel    │
-│  (Vite)     │   Bearer token     │   :8080     │                 │  PHP-FPM    │
-│  :5173      │                    └─────────────┘                 └──────┬──────┘
-└─────────────┘                                                           │
-                                                                          ▼
-                                                                   ┌─────────────┐
-                                                                   │   MySQL 8   │
-                                                                   │  :3307      │
-                                                                   └─────────────┘
+┌─────────────┐     ┌─────────────┐
+│   React     │     │ React Native│
+│  Web :5173  │     │  (Expo)     │
+└──────┬──────┘     └──────┬──────┘
+       │    HTTP/JSON + Bearer token
+       └────────┬──────────┘
+                ▼
+         ┌─────────────┐     ┌─────────────┐
+         │   Nginx     │────▶│  cv-service │ :8090
+         │   Laravel   │     │ Python+ORB  │
+         └──────┬──────┘     └─────────────┘
+                ▼
+         ┌─────────────┐
+         │   MySQL 8   │
+         └─────────────┘
 ```
 
 ## Couches backend (Laravel)
@@ -52,7 +57,7 @@
 | nginx | 8080 | Reverse proxy API |
 | backend | — | PHP-FPM Laravel |
 | mysql | 3307 | Base de données |
-| phpmyadmin | 8081 | Interface BDD |
+| phpmyadmin | 8082 | Interface BDD |
 
 ## Flux principaux
 

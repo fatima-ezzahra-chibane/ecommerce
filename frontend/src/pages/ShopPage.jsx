@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import Pagination from '../components/Pagination';
 import { productService, categoryService, wishlistService } from '../services';
+import ImageSearch from '../components/ImageSearch';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -74,6 +75,7 @@ export default function ShopPage() {
           <option value="price_desc">Prix décroissant</option>
           <option value="name">Nom A-Z</option>
         </select>
+        <ImageSearch />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">

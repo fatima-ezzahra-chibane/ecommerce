@@ -37,7 +37,7 @@
 | nginx | nginx:alpine | 8080 |
 | frontend | docker/node | 5173 |
 | mysql | mysql:8.0 | 3307 |
-| phpmyadmin | phpmyadmin:5.2 | 8081 |
+| phpmyadmin | phpmyadmin:5.2 | 8082 |
 
 Script d'installation : `setup.sh`
 
@@ -98,8 +98,33 @@ docker compose exec frontend npm test
 docker compose exec frontend npm run cy:run
 ```
 
-## 9. Prochaines phases
+## 9. Phase 3 — Mobile React Native
 
-- **Phase 3** : React Native
-- **Phase 4** : IA (vision, recommandations, chatbot)
+| Livrable | Statut |
+|----------|--------|
+| App Expo (`mobile/`) | Terminé |
+| Auth + AsyncStorage | Terminé |
+| Écrans MVP (shop, panier, checkout, commandes, profil) | Terminé |
+
+```bash
+cd mobile && npm install && npx expo start
+```
+
+## 10. Phase 4 — Computer vision
+
+| Composant | Technologie |
+|-----------|-------------|
+| Service CV | Python 3.11, FastAPI, **OpenCV ORB** |
+| Conteneur | `cv-service` port 8090 |
+| Laravel | `VisionSearchClient`, `products:index-visuals` |
+| Règle métier | **1 produit identique ou aucun** (seuil ORB strict) |
+
+```bash
+docker compose up -d cv-service
+docker compose exec backend php artisan products:index-visuals --fresh
+```
+
+## 11. Prochaines phases
+
+- **Phase 4** : IA (vision, recommandations, chatbot) — **terminée**
 - **Phase 5** : Stripe (paiement réel)

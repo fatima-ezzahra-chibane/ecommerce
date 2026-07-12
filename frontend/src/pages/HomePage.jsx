@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { productService } from '../services';
+import { productService, aiService } from '../services';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import TrustBadges from '../components/TrustBadges';
@@ -12,13 +12,15 @@ import { useToast } from '../contexts/ToastContext';
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([]);
+  const [forYou, setForYou] = useState([]);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { showToast } = useToast();
 
   useEffect(() => {
     productService.list({ per_page: 4, sort: 'latest' }).then(({ data }) => setFeatured(data.data || []));
-  }, []);
+    aiService.recommendations({ limit: 4 }).then(({ data }) => setForYou(data.data || []));
+  }, [user]);
 
   const addWishlist = async (id) => {
     if (!user) {
@@ -75,6 +77,27 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {forYou.length > 0 && (
+        <section>
+          <SectionHeader
+            title={user ? 'Recommandé pour vous' : 'Populaires'}
+            subtitle="Suggestions intelligentes basées sur nos best-sellers"
+            linkTo="/shop"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-stretch">
+            {forYou.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                onAddCart={addToCart}
+                onAddWishlist={addWishlist}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <TrustBadges />
     </div>

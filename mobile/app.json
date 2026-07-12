@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Vivid Shop",
+    "slug": "vivid-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vivid.shop"
+    },
+    "android": {
+      "package": "com.vivid.shop"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Autoriser l'accès à vos photos pour les avis produits."
+        }
+      ]
+    ]
+  }
+}

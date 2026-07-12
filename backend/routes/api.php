@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\AdminOrderController;
 use App\Http\Controllers\Api\Admin\AdminProductController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\CartController;
@@ -26,6 +27,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
+
+    Route::get('/ai/status', [AiController::class, 'status']);
+    Route::post('/ai/chat', [AiController::class, 'chat']);
+    Route::post('/ai/search-image', [AiController::class, 'searchImage']);
+    Route::get('/ai/recommendations', [AiController::class, 'recommendations']);
+    Route::get('/products/{id}/recommendations', [AiController::class, 'productRecommendations']);
 
     Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
 

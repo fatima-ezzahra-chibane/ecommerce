@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { productService, reviewService } from '../services';
+import { productService, reviewService, aiService } from '../services';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import MaterialIcon from '../components/MaterialIcon';
 import ProductImage from '../components/ProductImage';
+import ProductCard from '../components/ProductCard';
 import { getPromo } from '../utils/productDisplay';
 import { formatPrice } from '../utils/formatPrice';
 
@@ -29,6 +30,7 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [related, setRelated] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', imageFile: null });
   const [reviewPreview, setReviewPreview] = useState('');
   const fileRef = useRef(null);
@@ -41,6 +43,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     productService.get(id).then(({ data }) => setProduct(data.data));
     loadReviews();
+    aiService.productRecommendations(id).then(({ data }) => setRelated(data.data || []));
   }, [id]);
 
   const onReviewImage = (e) => {
@@ -171,6 +174,17 @@ export default function ProductDetailPage() {
           {!reviews.length && <p className="text-gray-400">Soyez le premier à donner votre avis.</p>}
         </div>
       </section>
+
+      {related.length > 0 && (
+        <section>
+          <h2 className="text-xl font-extrabold mb-6 text-[#475569]">Vous aimerez aussi</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {related.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} onAddCart={() => addToCart(p.id)} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

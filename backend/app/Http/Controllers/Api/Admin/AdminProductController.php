@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryInterface;
+use App\Services\Ai\VisionSearchClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,10 @@ use Illuminate\Support\Str;
 
 class AdminProductController extends Controller
 {
-    public function __construct(private ProductRepositoryInterface $products) {}
+    public function __construct(
+        private ProductRepositoryInterface $products,
+        private VisionSearchClient $vision,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -80,6 +84,11 @@ class AdminProductController extends Controller
 
         $path = $request->file('image')->store('products', 'public');
         $product->update(['image' => '/storage/'.$path]);
+        $product->refresh();
+
+        if ($product->status === 'active') {
+            $this->vision->indexFromUrl($product->id, 'http://nginx'.$product->image);
+        }
 
         return response()->json([
             'message' => 'Image téléversée.',
