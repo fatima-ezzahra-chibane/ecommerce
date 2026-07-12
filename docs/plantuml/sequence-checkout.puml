@@ -1,0 +1,21 @@
+@startuml sequence-checkout
+actor Client
+participant "React" as FE
+participant "API Laravel" as API
+participant "OrderService" as SVC
+database "MySQL" as DB
+
+Client -> FE : Valider checkout
+FE -> API : POST /orders (Bearer token)
+API -> SVC : createOrder()
+SVC -> DB : Vérifier panier non vide
+SVC -> DB : Vérifier stock produits
+SVC -> DB : Appliquer coupon (optionnel)
+SVC -> DB : Créer order + order_items
+SVC -> DB : Décrémenter stock
+SVC -> DB : Créer payment (simulé)
+SVC -> DB : Vider le panier
+SVC --> API : Order
+API --> FE : 201 + JSON commande
+FE --> Client : Confirmation commande
+@enduml

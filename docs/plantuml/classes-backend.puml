@@ -1,0 +1,39 @@
+@startuml classes-backend
+skinparam classAttributeIconSize 0
+
+package "Controllers" {
+  class AuthController
+  class CartController
+  class OrderController
+  class ProductController
+}
+
+package "Services" {
+  class AuthService
+  class CartService
+  class OrderService
+}
+
+package "Repositories" {
+  class CartRepository
+  class OrderRepository
+  class ProductRepository
+}
+
+package "Models" {
+  class User
+  class Product
+  class Cart
+  class Order
+}
+
+AuthController --> AuthService
+CartController --> CartService
+OrderController --> OrderService
+CartService --> CartRepository
+OrderService --> OrderRepository
+ProductController --> ProductRepository
+CartRepository --> Cart
+OrderRepository --> Order
+ProductRepository --> Product
+@enduml

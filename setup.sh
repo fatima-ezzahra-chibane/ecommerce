@@ -7,7 +7,7 @@ elif sudo docker info >/dev/null 2>&1; then DC=(sudo docker compose)
 else echo "Docker inaccessible."; exit 1; fi
 
 echo "==> Démarrage de tous les services..."
-"${DC[@]}" up -d --build backend nginx frontend mysql adminer
+"${DC[@]}" up -d --build backend nginx frontend mysql phpmyadmin
 
 echo "==> Attente MySQL..."
 for i in $(seq 1 36); do
@@ -38,7 +38,7 @@ echo ""
 echo "=== E-Commerce Platform ==="
 echo "Frontend  : http://localhost:5173"
 echo "API       : http://localhost:8080/api/v1"
-echo "Adminer   : http://localhost:8081  (MySQL UI — user: ecommerce / secret)"
+echo "PhpMyAdmin: http://localhost:8081  (user: ecommerce / secret)"
 echo ""
 echo "Comptes demo:"
 echo "  Admin  : admin@shop.com / password"

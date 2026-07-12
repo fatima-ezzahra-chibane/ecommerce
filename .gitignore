@@ -3,4 +3,7 @@ backend/.env
 backend/ecommerce
 frontend/node_modules/
 frontend/dist/
+frontend/cypress/screenshots/
+frontend/cypress/videos/
+backend/.phpunit.result.cache
 mysql_data/
