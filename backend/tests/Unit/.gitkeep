@@ -1,0 +1,1 @@
+# Dossier réservé aux tests unitaires (évite l'erreur PHPUnit sur CI si vide)

@@ -25,7 +25,14 @@ jobs:
 
       - name: Run PHPUnit
         working-directory: backend
-        run: php artisan test
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan test
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
   frontend:
     name: Vitest
@@ -35,7 +42,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -46,6 +53,8 @@ jobs:
       - name: Run unit tests
         working-directory: frontend
         run: npm test
+        env:
+          CI: true
 
   e2e:
     name: Cypress E2E
