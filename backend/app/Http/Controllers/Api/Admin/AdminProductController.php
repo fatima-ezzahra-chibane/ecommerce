@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryInterface;
@@ -23,20 +25,19 @@ class AdminProductController extends Controller
     {
         $paginated = Product::with('category')->latest()->paginate(15);
 
-        return response()->json(['data' => ProductResource::collection($paginated)]);
+        return response()->json([
+            'data' => ProductResource::collection($paginated),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+            ],
+        ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|string',
-            'status' => 'in:active,inactive',
-        ]);
+        $validated = $request->validated();
         $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(4);
         $validated['status'] = $validated['status'] ?? 'active';
 
@@ -48,20 +49,10 @@ class AdminProductController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateProductRequest $request, int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
-        $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|numeric|min:0',
-            'stock' => 'sometimes|integer|min:0',
-            'image' => 'nullable|string',
-            'status' => 'in:active,inactive',
-        ]);
-
-        $product = $this->products->update($product, $validated);
+        $product = $this->products->update($product, $request->validated());
 
         return response()->json([
             'message' => 'Produit mis à jour.',

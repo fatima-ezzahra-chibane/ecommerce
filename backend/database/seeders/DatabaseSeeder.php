@@ -36,12 +36,12 @@ class DatabaseSeeder extends Seeder
         ])->map(fn ($c) => Category::create($c));
 
         $products = [
-            ['name' => 'Smartphone Pro X', 'price' => 899.99, 'stock' => 50, 'cat' => 0],
-            ['name' => 'Casque Bluetooth', 'price' => 149.99, 'stock' => 100, 'cat' => 0],
-            ['name' => 'T-shirt Premium', 'price' => 29.99, 'stock' => 200, 'cat' => 1],
-            ['name' => 'Jean Slim Fit', 'price' => 59.99, 'stock' => 150, 'cat' => 1],
-            ['name' => 'Lampe Design', 'price' => 79.99, 'stock' => 80, 'cat' => 2],
-            ['name' => 'Coussin Déco', 'price' => 24.99, 'stock' => 120, 'cat' => 2],
+            ['name' => 'Smartphone Pro X', 'price' => 899.99, 'original_price' => 1199.99, 'stock' => 50, 'cat' => 0],
+            ['name' => 'Casque Bluetooth', 'price' => 149.99, 'original_price' => null, 'stock' => 100, 'cat' => 0],
+            ['name' => 'T-shirt Premium', 'price' => 29.99, 'original_price' => 49.99, 'stock' => 200, 'cat' => 1],
+            ['name' => 'Jean Slim Fit', 'price' => 59.99, 'original_price' => null, 'stock' => 150, 'cat' => 1],
+            ['name' => 'Lampe Design', 'price' => 79.99, 'original_price' => 99.99, 'stock' => 80, 'cat' => 2],
+            ['name' => 'Coussin Déco', 'price' => 24.99, 'original_price' => null, 'stock' => 120, 'cat' => 2],
         ];
 
         foreach ($products as $p) {
@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
                 'slug' => Str::slug($p['name']),
                 'description' => "Description de {$p['name']}. Produit de qualité premium.",
                 'price' => $p['price'],
+                'original_price' => $p['original_price'],
                 'stock' => $p['stock'],
                 'image' => 'https://picsum.photos/seed/'.Str::slug($p['name']).'/400/400',
                 'status' => 'active',

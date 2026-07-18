@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -27,15 +28,9 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreOrderRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'shipping_address' => 'required|string|max:1000',
-            'payment_method' => 'required|string|in:card,paypal,cash',
-            'coupon_code' => 'nullable|string|exists:coupons,code',
-        ]);
-
-        $order = $this->orderService->checkout($request->user(), $validated);
+        $order = $this->orderService->checkout($request->user(), $request->validated());
 
         return response()->json([
             'message' => 'Commande passée avec succès.',

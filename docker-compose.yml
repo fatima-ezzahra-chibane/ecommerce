@@ -81,18 +81,20 @@ services:
     ports:
       - "8090:8090"
     environment:
-      CV_MIN_GOOD_MATCHES: 10
-      CV_MATCH_RATIO: 0.8
-      CV_MIN_CONFIDENCE_GAP: 3
-      CV_MAX_IMAGE_DIM: 800
+      CV_MIN_SIMILARITY: 0.72
+      CV_MIN_SIMILARITY_GAP: 0.035
+      CV_MAX_IMAGE_DIM: 1024
+      CV_ONNX_PATH: /app/models/mobilenetv2-12.onnx
     volumes:
+      - ./cv-service/app:/app/app
+      - ./cv-service/models:/app/models:ro
       - cv_index_data:/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 20s
+      retries: 8
+      start_period: 120s
 
 volumes:
   mysql_data:

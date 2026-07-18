@@ -29,12 +29,14 @@ class ImageSearchService
 
         $result = $this->vision->search($image);
         $productId = $result['product_id'] ?? null;
+        $confidence = (float) ($result['confidence'] ?? 0);
 
-        if (! $productId) {
+        // Double contrôle côté API : rejeter les matchs trop faibles
+        if (! $productId || $confidence < 0.70) {
             return [
                 'product_id' => null,
                 'match_count' => (int) ($result['match_count'] ?? 0),
-                'confidence' => (float) ($result['confidence'] ?? 0),
+                'confidence' => $confidence,
                 'products' => collect(),
                 'source' => 'opencv_orb',
             ];
@@ -45,7 +47,7 @@ class ImageSearchService
         return [
             'product_id' => $product?->id,
             'match_count' => (int) ($result['match_count'] ?? 0),
-            'confidence' => (float) ($result['confidence'] ?? 0),
+            'confidence' => $confidence,
             'products' => $product ? collect([$product]) : collect(),
             'source' => 'opencv_orb',
         ];

@@ -90,7 +90,6 @@ export default function HomeScreen({ navigation }) {
             <View key={product.id} style={styles.gridItem}>
               <ProductCard
                 product={product}
-                index={index}
                 wishlisted={isWishlisted(product.id)}
                 onPress={() => navigation.navigate('ProductDetail', { id: product.id })}
                 onAddCart={handleAddCart}
@@ -106,11 +105,10 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.sectionTitle}>{user ? 'Recommandé pour vous' : 'Populaires'}</Text>
           <Text style={styles.sectionSub}>Suggestions intelligentes</Text>
           <View style={styles.grid}>
-            {forYou.map((product, index) => (
+            {forYou.map((product) => (
               <View key={product.id} style={styles.gridItem}>
                 <ProductCard
                   product={product}
-                  index={index}
                   wishlisted={isWishlisted(product.id)}
                   onPress={() => navigation.navigate('ProductDetail', { id: product.id })}
                   onAddCart={handleAddCart}

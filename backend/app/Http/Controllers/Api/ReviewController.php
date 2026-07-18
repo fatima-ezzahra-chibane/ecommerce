@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Review\StoreReviewRequest;
 use App\Http\Resources\ReviewResource;
 use App\Models\Product;
 use App\Models\Review;
@@ -29,15 +30,11 @@ class ReviewController extends Controller
         ]);
     }
 
-    public function store(Request $request, int $productId): JsonResponse
+    public function store(StoreReviewRequest $request, int $productId): JsonResponse
     {
         Product::active()->findOrFail($productId);
 
-        $validated = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
+        $validated = $request->validated();
 
         $existing = Review::where('user_id', $request->user()->id)
             ->where('product_id', $productId)

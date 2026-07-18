@@ -6,9 +6,9 @@ import { formatPrice } from '../utils/formatPrice';
 
 const PINK = '#FF4D94';
 
-export default function ProductCard({ product, onAddCart, onAddWishlist, index = 0 }) {
+export default function ProductCard({ product, onAddCart, onAddWishlist }) {
   const rating = product.average_rating ? Number(product.average_rating) : null;
-  const promo = getPromo(product, index);
+  const promo = getPromo(product);
   const price = Number(product.price);
 
   return (

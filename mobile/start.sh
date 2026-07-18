@@ -17,6 +17,8 @@ fi
 export EXPO_PUBLIC_API_URL="http://${API_HOST_IP}:8080/api/v1"
 # tunnel | lan (défaut, recommandé VirtualBox) | auto (essaie tunnel puis LAN)
 EXPO_MODE="${EXPO_MODE:-lan}"
+# FORCE_INSTALL=1 pour forcer un npm install complet
+FORCE_INSTALL="${FORCE_INSTALL:-0}"
 
 echo "==> Démarrage Expo via Docker"
 echo "    API mobile : $EXPO_PUBLIC_API_URL"
@@ -57,6 +59,10 @@ for port in 8081 19000 19001; do
   fi
 done
 
+echo "==> Lancement du conteneur Expo..."
+echo "    (si node_modules existe déjà, npm install est ignoré → démarrage rapide)"
+echo ""
+
 docker run -it --rm \
   -v "$(pwd):/app" \
   -v vivid_mobile_node_modules:/app/node_modules \
@@ -67,21 +73,36 @@ docker run -it --rm \
   -e "EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL" \
   -e "EXPO_MODE=$EXPO_MODE" \
   -e "API_HOST_IP=$API_HOST_IP" \
+  -e "FORCE_INSTALL=$FORCE_INSTALL" \
   -e "REACT_NATIVE_PACKAGER_HOSTNAME=$API_HOST_IP" \
   node:22-alpine \
-  sh -c 'npm install --legacy-peer-deps && npm install @expo/ngrok@4.1.0 expo-image-picker --legacy-peer-deps && npx expo install --fix && \
-    if [ "$EXPO_MODE" = "lan" ]; then \
-      echo "==> Mode LAN (exp://${API_HOST_IP}:8081)"; \
-      npx expo start --lan; \
-    elif [ "$EXPO_MODE" = "tunnel" ]; then \
-      npx expo start --tunnel; \
-    else \
-      echo "==> Tentative tunnel ngrok..."; \
-      npx expo start --tunnel || { \
-        echo ""; \
-        echo "!!! Tunnel ngrok indisponible — passage en mode LAN"; \
-        echo "    VirtualBox : redirige les ports 8081 et 19000 (Hôte -> Invité 10.0.2.15)"; \
-        echo "    Puis scanne le QR dans Expo Go (exp://${API_HOST_IP}:8081)"; \
-        npx expo start --lan; \
-      }; \
-    fi'
+  sh -c '
+    set -e
+    NEED_INSTALL=0
+    if [ "$FORCE_INSTALL" = "1" ]; then
+      NEED_INSTALL=1
+    elif [ ! -d node_modules/expo ] || [ ! -d node_modules/@expo/cli ]; then
+      NEED_INSTALL=1
+    fi
+
+    if [ "$NEED_INSTALL" = "1" ]; then
+      echo "==> Installation des dépendances (peut prendre plusieurs minutes)..."
+      npm install --legacy-peer-deps
+    else
+      echo "==> Dépendances déjà présentes — skip npm install"
+    fi
+
+    echo "==> Mode ${EXPO_MODE} (exp://${API_HOST_IP}:8081)"
+    if [ "$EXPO_MODE" = "lan" ]; then
+      npx expo start --lan
+    elif [ "$EXPO_MODE" = "tunnel" ]; then
+      npx expo start --tunnel
+    else
+      echo "==> Tentative tunnel ngrok..."
+      npx expo start --tunnel || {
+        echo ""
+        echo "!!! Tunnel ngrok indisponible — passage en mode LAN"
+        npx expo start --lan
+      }
+    fi
+  '

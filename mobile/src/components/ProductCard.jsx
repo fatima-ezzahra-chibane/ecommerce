@@ -8,10 +8,10 @@ import Stars from './Stars';
 
 const FALLBACK = 'https://picsum.photos/seed/vivid/400/400';
 
-export default function ProductCard({ product, index = 0, onPress, onAddCart, onAddWishlist, wishlisted = false }) {
+export default function ProductCard({ product, onPress, onAddCart, onAddWishlist, wishlisted = false }) {
   const imageUri = resolveMediaUrl(product.image) || FALLBACK;
   const rating = product.average_rating ? Number(product.average_rating) : null;
-  const promo = getPromo(product, index);
+  const promo = getPromo(product);
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>

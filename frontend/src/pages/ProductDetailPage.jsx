@@ -69,7 +69,7 @@ export default function ProductDetailPage() {
 
   if (!product) return <div className="text-center py-20 text-gray-400">Chargement...</div>;
 
-  const promo = getPromo(product, product.id);
+  const promo = getPromo(product);
 
   return (
     <div className="space-y-10">
@@ -180,7 +180,7 @@ export default function ProductDetailPage() {
           <h2 className="text-xl font-extrabold mb-6 text-[#475569]">Vous aimerez aussi</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {related.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} onAddCart={() => addToCart(p.id)} />
+              <ProductCard key={p.id} product={p} onAddCart={() => addToCart(p.id)} />
             ))}
           </div>
         </section>

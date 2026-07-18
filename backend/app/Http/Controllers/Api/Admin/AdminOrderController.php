@@ -3,31 +3,38 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Repositories\Contracts\OrderRepositoryInterface;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AdminOrderController extends Controller
 {
+    public function __construct(private OrderRepositoryInterface $orders) {}
+
     public function index(): JsonResponse
     {
-        $orders = Order::with(['user', 'items.product', 'payment'])->latest()->paginate(15);
+        $orders = $this->orders->paginateAll();
 
-        return response()->json(['data' => OrderResource::collection($orders)]);
+        return response()->json([
+            'data' => OrderResource::collection($orders),
+            'meta' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'total' => $orders->total(),
+            ],
+        ]);
     }
 
-    public function updateStatus(Request $request, int $id): JsonResponse
+    public function updateStatus(UpdateOrderStatusRequest $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        $validated = $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-        ]);
-        $order->update($validated);
+        $updated = $this->orders->updateStatus($order, $request->validated()['status']);
 
         return response()->json([
             'message' => 'Statut de la commande mis à jour.',
-            'data' => new OrderResource($order->load(['items.product', 'payment'])),
+            'data' => new OrderResource($updated),
         ]);
     }
 }

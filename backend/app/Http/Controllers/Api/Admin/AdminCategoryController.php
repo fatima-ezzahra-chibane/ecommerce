@@ -3,29 +3,30 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Models\Category;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
 {
+    public function __construct(private CategoryRepositoryInterface $categories) {}
+
     public function index(): JsonResponse
     {
-        return response()->json(['data' => Category::withCount('products')->get()]);
+        return response()->json(['data' => $this->categories->allWithCount()]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
         $validated['slug'] = Str::slug($validated['name']);
 
         return response()->json([
             'message' => 'Catégorie créée.',
-            'data' => Category::create($validated),
+            'data' => $this->categories->create($validated),
         ], 201);
     }
 
@@ -39,17 +40,17 @@ class AdminCategoryController extends Controller
         if (isset($validated['name'])) {
             $validated['slug'] = Str::slug($validated['name']);
         }
-        $category->update($validated);
+        $updated = $this->categories->update($category, $validated);
 
         return response()->json([
             'message' => 'Catégorie mise à jour.',
-            'data' => $category,
+            'data' => $updated,
         ]);
     }
 
     public function destroy(int $id): JsonResponse
     {
-        Category::findOrFail($id)->delete();
+        $this->categories->delete(Category::findOrFail($id));
 
         return response()->json(['message' => 'Catégorie supprimée.']);
     }

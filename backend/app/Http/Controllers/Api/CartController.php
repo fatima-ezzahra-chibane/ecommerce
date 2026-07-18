@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cart\StoreCartRequest;
+use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,12 +20,9 @@ class CartController extends Controller
         return response()->json(['data' => $cart]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCartRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'integer|min:1|max:99',
-        ]);
+        $validated = $request->validated();
 
         $cart = $this->cartService->addItem(
             $request->user(),
@@ -34,9 +33,9 @@ class CartController extends Controller
         return response()->json(['message' => 'Produit ajouté au panier.', 'data' => $cart]);
     }
 
-    public function update(Request $request, int $itemId): JsonResponse
+    public function update(UpdateCartRequest $request, int $itemId): JsonResponse
     {
-        $validated = $request->validate(['quantity' => 'required|integer|min:0|max:99']);
+        $validated = $request->validated();
         $cart = $this->cartService->updateQuantity($request->user(), $itemId, $validated['quantity']);
 
         return response()->json(['message' => 'Panier mis à jour.', 'data' => $cart]);

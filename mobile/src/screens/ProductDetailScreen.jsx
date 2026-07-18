@@ -67,11 +67,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission', 'Accès à la galerie requis pour ajouter une photo');
-      return;
-    }
+    // Un seul clic : ouvre directement la galerie (permission demandée si besoin)
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.8,
@@ -115,7 +111,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   }
 
   const imageUri = resolveMediaUrl(product.image) || FALLBACK;
-  const promo = getPromo(product, product.id);
+  const promo = getPromo(product);
   const wishlisted = isWishlisted(product.id);
 
   return (
@@ -221,11 +217,10 @@ export default function ProductDetailScreen({ route, navigation }) {
         <View style={styles.relatedSection}>
           <Text style={styles.relatedTitle}>Vous aimerez aussi</Text>
           <View style={styles.relatedGrid}>
-            {related.map((item, index) => (
+            {related.map((item) => (
               <View key={item.id} style={styles.relatedItem}>
                 <ProductCard
                   product={item}
-                  index={index}
                   onPress={() => navigation.push('ProductDetail', { id: item.id })}
                   onAddCart={handleAdd}
                 />

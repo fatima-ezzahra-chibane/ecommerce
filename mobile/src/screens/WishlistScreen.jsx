@@ -80,10 +80,9 @@ export default function WishlistScreen({ navigation }) {
             onRefresh={() => { setRefreshing(true); load(); }}
           />
         }
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <ProductCard
             product={item.product}
-            index={index}
             wishlisted
             onPress={() => navigation.navigate('ProductDetail', { id: item.product_id })}
             onAddCart={handleAddCart}

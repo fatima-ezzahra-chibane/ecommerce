@@ -28,13 +28,13 @@ export default function AdminProductsPage() {
 
   const emptyForm = () => ({
     category_id: categories[0]?.id || '',
-    name: '', description: '', price: '', stock: 0, status: 'active',
+    name: '', description: '', price: '', original_price: '', stock: 0, status: 'active',
     imageFile: null,
   });
 
   const openForm = (product = null) => {
     if (product) {
-      setForm({ ...product, category_id: product.category?.id || product.category_id, imageFile: null });
+      setForm({ ...product, category_id: product.category?.id || product.category_id, original_price: product.original_price || '', imageFile: null });
       setPreview(product.image || '');
     } else {
       setForm(emptyForm());
@@ -55,7 +55,12 @@ export default function AdminProductsPage() {
     setLoading(true);
     try {
       const { imageFile, image, ...rest } = form;
-      const payload = { ...rest, price: parseFloat(form.price), stock: parseInt(form.stock, 10) };
+      const payload = {
+        ...rest,
+        price: parseFloat(form.price),
+        original_price: form.original_price ? parseFloat(form.original_price) : null,
+        stock: parseInt(form.stock, 10),
+      };
       let productId = form.id;
 
       if (form.id) {
@@ -104,6 +109,8 @@ export default function AdminProductsPage() {
           </select>
           <input placeholder="Prix (DH)" type="number" step="0.01" required className="input-vivid !rounded-xl"
             value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <input placeholder="Ancien prix (DH) — promo" type="number" step="0.01" className="input-vivid !rounded-xl"
+            value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} />
           <input placeholder="Stock" type="number" required className="input-vivid !rounded-xl"
             value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
           <div className="md:col-span-2 flex flex-col sm:flex-row gap-4 items-start">

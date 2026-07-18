@@ -9,3 +9,6 @@ mobile/node_modules/
 mobile/.expo/
 backend/.phpunit.result.cache
 mysql_data/
+cv-service/app/__pycache__/
+cv-service/models/*.onnx
+*.pyc

@@ -7,7 +7,11 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vivid.shop"
+      "bundleIdentifier": "com.vivid.shop",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Vivid Shop a besoin d'accéder à vos photos pour la recherche par image et les avis produits.",
+        "NSCameraUsageDescription": "Vivid Shop a besoin de l'appareil photo pour prendre une photo de produit."
+      }
     },
     "android": {
       "package": "com.vivid.shop"
@@ -18,7 +22,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Autoriser l'accès à vos photos pour les avis produits."
+          "photosPermission": "Vivid Shop a besoin d'accéder à vos photos pour la recherche par image et les avis produits.",
+          "cameraPermission": "Vivid Shop a besoin de l'appareil photo pour prendre une photo de produit."
         }
       ]
     ]

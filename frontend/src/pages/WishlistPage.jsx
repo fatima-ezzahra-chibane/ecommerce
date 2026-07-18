@@ -49,7 +49,6 @@ export default function WishlistPage() {
             <ProductCard
               key={item.id}
               product={item.product}
-              index={i}
               onAddCart={addToCart}
               onAddWishlist={() => remove(item.product_id)}
             />

@@ -19,18 +19,22 @@ use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
-    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
+        Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+    });
 
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
 
     Route::get('/ai/status', [AiController::class, 'status']);
-    Route::post('/ai/chat', [AiController::class, 'chat']);
-    Route::post('/ai/search-image', [AiController::class, 'searchImage']);
+    Route::middleware('throttle:20,1')->group(function () {
+        Route::post('/ai/chat', [AiController::class, 'chat']);
+        Route::post('/ai/search-image', [AiController::class, 'searchImage']);
+    });
     Route::get('/ai/recommendations', [AiController::class, 'recommendations']);
     Route::get('/products/{id}/recommendations', [AiController::class, 'productRecommendations']);
 

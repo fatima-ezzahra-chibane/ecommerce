@@ -11,7 +11,16 @@ class AdminUserController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(['data' => UserResource::collection(User::latest()->paginate(15))]);
+        $users = User::latest()->paginate(15);
+
+        return response()->json([
+            'data' => UserResource::collection($users),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'total' => $users->total(),
+            ],
+        ]);
     }
 
     public function toggleActive(int $id): JsonResponse

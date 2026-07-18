@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
 import { adminService } from '../../services';
+import Pagination from '../../components/Pagination';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
+  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const load = () => adminService.users().then(({ data }) => setUsers(data.data || []));
+  const load = (p = page) => {
+    adminService.users({ page: p }).then(({ data }) => {
+      setUsers(data.data || []);
+      setMeta(data.meta || null);
+    });
+  };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(page); }, [page]);
 
   const toggle = async (id) => {
     await adminService.toggleUser(id);
-    load();
+    load(page);
   };
 
   return (
@@ -34,7 +42,7 @@ export default function AdminUsersPage() {
                 <td className="p-3">{u.name}</td>
                 <td className="p-3">{u.email}</td>
                 <td className="p-3"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{u.role}</span></td>
-                <td className="p-3">{u.is_active ? '✅ Actif' : '❌ Inactif'}</td>
+                <td className="p-3">{u.is_active ? 'Actif' : 'Inactif'}</td>
                 <td className="p-3 text-right">
                   {u.role !== 'admin' && (
                     <button onClick={() => toggle(u.id)} className="text-sm text-[#ff4d8d]">
@@ -48,6 +56,7 @@ export default function AdminUsersPage() {
         </table>
       </div>
       </div>
+      <Pagination meta={meta} onPage={setPage} />
     </div>
   );
 }

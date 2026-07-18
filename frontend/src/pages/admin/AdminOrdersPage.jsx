@@ -1,20 +1,28 @@
 import { useEffect, useState } from 'react';
 import { adminService } from '../../services';
 import { formatPrice } from '../../utils/formatPrice';
+import Pagination from '../../components/Pagination';
 
 const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 const LABELS = { pending: 'En attente', processing: 'En cours', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée' };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const load = () => adminService.orders().then(({ data }) => setOrders(data.data || []));
+  const load = (p = page) => {
+    adminService.orders({ page: p }).then(({ data }) => {
+      setOrders(data.data || []);
+      setMeta(data.meta || null);
+    });
+  };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(page); }, [page]);
 
   const changeStatus = async (id, status) => {
     await adminService.updateOrderStatus(id, status);
-    load();
+    load(page);
   };
 
   return (
@@ -49,6 +57,7 @@ export default function AdminOrdersPage() {
         ))}
         {!orders.length && <p className="text-gray-500">Aucune commande.</p>}
       </div>
+      <Pagination meta={meta} onPage={setPage} />
     </div>
   );
 }

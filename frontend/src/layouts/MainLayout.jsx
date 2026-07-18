@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import MaterialIcon from '../components/MaterialIcon';
 import MobileNav from '../components/MobileNav';
 import SearchField from '../components/SearchField';
-import Chatbot from '../components/Chatbot';
+import WhatsAppButton from '../components/WhatsAppButton';
 
 export default function MainLayout() {
   const { user, logout, isAdmin } = useAuth();
@@ -120,7 +120,7 @@ export default function MainLayout() {
       </main>
 
       <MobileNav />
-      <Chatbot />
+      <WhatsAppButton />
 
       <footer className="bg-[#f3f3f5] mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">

@@ -13,13 +13,14 @@ class Product extends Model
 
     protected $fillable = [
         'category_id', 'name', 'slug', 'description',
-        'price', 'stock', 'image', 'status',
+        'price', 'original_price', 'stock', 'image', 'status',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'original_price' => 'decimal:2',
             'stock' => 'integer',
         ];
     }

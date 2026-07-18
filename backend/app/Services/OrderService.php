@@ -7,12 +7,17 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\User;
+use App\Repositories\Contracts\OrderRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
-    public function __construct(private CartService $cartService) {}
+    public function __construct(
+        private CartService $cartService,
+        private OrderRepositoryInterface $orders,
+    ) {}
 
     public function checkout(User $user, array $data): Order
     {
@@ -39,7 +44,7 @@ class OrderService
 
             $total = max(0, $subtotal - $discount);
 
-            $order = Order::create([
+            $order = $this->orders->create([
                 'user_id' => $user->id,
                 'total_price' => $total,
                 'status' => 'pending',
@@ -79,11 +84,8 @@ class OrderService
         });
     }
 
-    public function userOrders(User $user)
+    public function userOrders(User $user): LengthAwarePaginator
     {
-        return Order::where('user_id', $user->id)
-            ->with(['items.product', 'payment'])
-            ->latest()
-            ->paginate(10);
+        return $this->orders->paginateByUser($user);
     }
 }

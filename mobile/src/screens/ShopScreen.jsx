@@ -93,11 +93,7 @@ export default function ShopScreen({ navigation }) {
   };
 
   const searchByImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission', 'Accès à la galerie requis');
-      return;
-    }
+    // Un seul clic : ouvre directement la galerie (permission demandée si besoin)
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.5,
@@ -227,10 +223,9 @@ export default function ShopScreen({ navigation }) {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />
         }
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <ProductCard
             product={item}
-            index={index}
             wishlisted={isWishlisted(item.id)}
             onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
             onAddCart={handleAddCart}
