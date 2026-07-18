@@ -25,14 +25,14 @@ jobs:
 
       - name: Run PHPUnit
         working-directory: backend
-        run: |
-          cp .env.example .env
-          php artisan key:generate --force
-          php artisan test
+        run: php artisan test
         env:
           APP_ENV: testing
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
 
   frontend:
     name: Vitest
@@ -52,9 +52,10 @@ jobs:
 
       - name: Run unit tests
         working-directory: frontend
-        run: npm test
+        run: npx vitest run --reporter=verbose
         env:
           CI: true
+          VITEST: 'true'
 
   e2e:
     name: Cypress E2E
