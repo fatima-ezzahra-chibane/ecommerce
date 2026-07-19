@@ -42,7 +42,7 @@
               ┌──────────────┐     HTTP      ┌──────────────┐
               │   Laravel    │ ──────────▶  │  cv-service   │
               │   PHP-FPM   │              │  Python :8090  │
-              │   (API)     │ ◀──────────  │  OpenCV ORB   │
+              │   (API)     │ ◀──────────  │  MobileNetV2  │
               └──────┬───────┘              └──────────────┘
                      ▼                            │
               ┌──────────────┐              ┌─────┴──────┐
@@ -59,7 +59,7 @@
 | **React Native** | App mobile client (Expo Go) |
 | **Nginx** | Reverse proxy, sert les fichiers statiques Laravel, transmet PHP à FPM |
 | **Laravel** | API REST, logique métier, authentification Sanctum |
-| **cv-service** | Microservice de computer vision (recherche image, OpenCV ORB) |
+| **cv-service** | Microservice de computer vision (recherche image, MobileNetV2 ONNX) |
 | **MySQL** | Base de données relationnelle |
 | **PhpMyAdmin** | Interface web d'administration BDD |
 
@@ -606,7 +606,7 @@ mysql (healthy) ── phpmyadmin
 | Volume | Type | Service | Contenu |
 |--------|------|---------|---------|
 | `mysql_data` | Nommé | mysql | Données MySQL persistantes |
-| `cv_index_data` | Nommé | cv-service | Index ORB (index.pkl) |
+| `cv_index_data` | Nommé | cv-service | Index embeddings (index.pkl) |
 | `./backend:/var/www/html` | Bind | backend + nginx | Code Laravel |
 | `./frontend:/app` | Bind | frontend | Code React |
 | `/app/node_modules` | Anonyme | frontend | Isole node_modules |
@@ -733,9 +733,9 @@ Sans cette variable, Metro annonce son IP Docker interne (`172.17.0.2`) dans le 
 | **Séparation des responsabilités** | Controller → Service → Repository → Model |
 | **Repository Pattern** | Interface + implémentation, injection de dépendances |
 | **API Resources** | Formatage JSON cohérent, pas d'exposition directe des modèles |
-| **Validation** | Form Requests pour auth, validation inline pour le reste |
-| **Tests** | 33 PHPUnit + 10 Vitest + 1 Cypress E2E = 44 tests |
-| **CI/CD** | GitHub Actions (3 jobs : backend, frontend, E2E) |
+| **Validation** | Form Requests pour auth + métier (Cart, Order, Review, Profile, Admin) |
+| **Tests** | PHPUnit (Feature) + Vitest + Cypress E2E local |
+| **CI/CD** | GitHub Actions (2 jobs : PHPUnit, Vitest) — E2E Cypress en local |
 | **Docker** | Healthchecks, volumes nommés, chaîne de dépendances |
 | **Messages FR** | Toutes les réponses API et UI en français |
 | **Microservice CV** | Séparation propre, API REST, stockage indépendant |
@@ -756,13 +756,14 @@ Tous les points d'amélioration identifiés lors de l'audit initial ont été co
 | 8 | **Pas d'Error Boundary** | Composant `ErrorBoundary` créé, enveloppe toute l'app dans `App.jsx`. |
 | 9 | **Pas de .dockerignore** | `.dockerignore` ajouté pour `backend/`, `frontend/`, `cv-service/`. |
 
-### 8.3 Points restants (non bloquants, attendus pour un PFE)
+### 8.3 Points restants (hors périmètre PFE / non bloquants)
 
 | # | Point | Gravité | Raison |
 |---|-------|---------|--------|
-| 1 | **Paiement simulé** | Attendu | Phase 5 (Stripe) prévue |
+| 1 | **Paiement simulé** | Hors PFE | Accepté pour la soutenance |
 | 2 | **HTTPS non configuré** | Attendu | Environnement de développement local |
 | 3 | **Multi-stage Docker builds** | Faible | Images de dev, non optimisées pour la production |
+| 4 | **Cypress hors CI** | Faible | Job E2E Docker trop lourd sur GitHub Actions ; scénario conservé en local |
 
 ### 8.4 Fichiers inutilisés
 
@@ -858,11 +859,12 @@ Aucune dépendance réellement inutilisée détectée.
 ### 10.1 Résumé du projet
 
 **Vivid** est une plateforme e-commerce full-stack avec :
-- **Backend** : API REST Laravel 12 (PHP 8.3) avec authentification Sanctum, Repository Pattern, 33 tests PHPUnit
-- **Frontend web** : SPA React 19 avec Tailwind CSS 4, dashboard admin avec graphiques, 10 tests Vitest + 1 E2E Cypress
-- **App mobile** : React Native 0.81 via Expo SDK 54, navigation Stack+Tabs, upload multipart natif
-- **Microservice CV** : Python 3.11, FastAPI, OpenCV ORB pour la recherche de produits par image (correspondance stricte)
-- **Infrastructure** : Docker Compose (6 services), CI/CD GitHub Actions (3 jobs)
+- **Backend** : API REST Laravel 12 (PHP 8.3) avec authentification Sanctum, Repository Pattern, tests PHPUnit
+- **Frontend web** : SPA React 19 avec Tailwind CSS 4, dashboard admin, Vitest + Cypress E2E local
+- **App mobile** : React Native via Expo, navigation Stack+Tabs, bouton WhatsApp
+- **Microservice CV** : Python 3.11, FastAPI, MobileNetV2 ONNX (embeddings) pour la recherche par image
+- **Contact** : WhatsApp flottant (web + mobile) à la place d’un chatbot UI
+- **Infrastructure** : Docker Compose (6 services), CI/CD GitHub Actions (PHPUnit + Vitest)
 
 ### 10.2 Choix techniques et justifications
 
@@ -871,8 +873,9 @@ Aucune dépendance réellement inutilisée détectée.
 | **Laravel** | Framework PHP mature, Eloquent ORM, Sanctum pour les SPA, écosystème riche |
 | **React** | Composants fonctionnels, hooks, large communauté, Vite pour le HMR rapide |
 | **React Native + Expo** | Code partagé avec le web (services, logique), Expo Go pour le développement rapide |
-| **OpenCV ORB** (pas cloud) | Pas de dépendance API externe, fonctionne offline, gratuit, adapté au PFE |
-| **Microservice CV** (pas dans Laravel) | Python + OpenCV plus naturel qu'en PHP, séparation des responsabilités, déploiement indépendant |
+| **MobileNetV2 ONNX** (pas cloud) | Embeddings locaux, photos réelles, pas d’API vision payante, adapté au PFE |
+| **Microservice CV** (pas dans Laravel) | Python + ONNX plus naturel qu’en PHP, séparation des responsabilités |
+| **WhatsApp** (contact client) | Canal réel pour le client, simple à démontrer en soutenance |
 | **Docker Compose** | Environnement reproductible, pas de "ça marche sur ma machine" |
 | **Repository Pattern** | Abstraction de l'accès aux données, testabilité, respect SOLID |
 | **Sanctum** (pas JWT) | Conçu pour les SPA, intégré à Laravel, plus simple que Passport |
@@ -882,18 +885,18 @@ Aucune dépendance réellement inutilisée détectée.
 1. **Séparation claire** : Backend API-only → consommable par web ET mobile
 2. **Microservice CV** : Technologie indépendante (Python), scalable séparément
 3. **Code partagé** : Les services API sont quasi-identiques entre web et mobile
-4. **Testabilité** : 44+ tests automatisés, CI GitHub Actions
-5. **Dockerisé** : `setup.sh` installe et démarre tout en une commande
-6. **Évolutif** : Ajout de Stripe (Phase 5) sans modifier l'architecture existante
+4. **Testabilité** : PHPUnit + Vitest en CI, Cypress E2E en local
+5. **Dockerisé** : `setup.sh` / `docker compose` démarre la stack
+6. **Contact client** : WhatsApp intégré web + mobile
 
 ### 10.4 Couverture de tests
 
-| Couche | Framework | Tests | Fichiers |
-|--------|-----------|-------|----------|
-| Backend | PHPUnit | 33 | 7 (Auth, Cart, Checkout, Wishlist, Admin, Health, AI) |
-| Frontend unitaire | Vitest | 10 | 3 (LoginPage, ProductCard, ProtectedRoute) |
-| Frontend E2E | Cypress | 1 parcours | 1 (checkout complet) |
-| CI/CD | GitHub Actions | 3 jobs | PHPUnit → Vitest → Cypress |
+| Couche | Framework | Contenu | CI |
+|--------|-----------|---------|-----|
+| Backend | PHPUnit | Auth, Cart, Checkout, Wishlist, Admin, Health, AI | Oui |
+| Frontend unitaire | Vitest | LoginPage, ProductCard, ProtectedRoute | Oui |
+| Frontend E2E | Cypress | 1 parcours checkout | Local uniquement |
+| CI/CD | GitHub Actions | 2 jobs | PHPUnit → Vitest |
 
 ### 10.5 Comptes démo
 
@@ -936,7 +939,9 @@ docker compose exec backend php artisan products:index-visuals --fresh
 | Phase | Contenu | Statut |
 |-------|---------|--------|
 | 1 | Backend Laravel, API REST, Git, PHPUnit, Postman | Terminé |
-| 2 | Vitest, Cypress E2E, GitHub Actions CI | Terminé |
+| 2 | Vitest, Cypress E2E (local), GitHub Actions CI | Terminé |
 | 3 | App mobile React Native (Expo) | Terminé |
-| 4 | Computer Vision (OpenCV ORB), chatbot, recommandations | Terminé |
-| 5 | Stripe (paiement réel) | Non commencé |
+| 4 | Computer Vision (MobileNetV2 ONNX), WhatsApp, recommandations | Terminé |
+
+> **Verdict PFE :** projet **terminé** pour la soutenance. Paiement réel hors périmètre.
+
