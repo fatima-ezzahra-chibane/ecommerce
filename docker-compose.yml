@@ -86,8 +86,8 @@ services:
       CV_MAX_IMAGE_DIM: 1024
       CV_ONNX_PATH: /app/models/mobilenetv2-12.onnx
     volumes:
+      # Ne pas monter models/ : le .onnx est gitignoré et écraserait le modèle embarqué dans l'image (CI).
       - ./cv-service/app:/app/app
-      - ./cv-service/models:/app/models:ro
       - cv_index_data:/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]

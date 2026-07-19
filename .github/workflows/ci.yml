@@ -92,6 +92,14 @@ jobs:
             curl -sf http://localhost:8080/api/v1/products && curl -sf http://localhost:5173 && break
             sleep 5
           done
+          curl -sf http://localhost:8080/api/v1/products
+          curl -sf http://localhost:5173
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail=120 cv-service backend nginx frontend mysql
 
       - uses: actions/setup-node@v4
         with:

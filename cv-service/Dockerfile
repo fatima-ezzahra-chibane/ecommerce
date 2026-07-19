@@ -11,6 +11,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
+# Modèle embarqué (gitignoré) — URL directe media.githubusercontent pour éviter LFS/redirects
+ADD https://media.githubusercontent.com/media/onnx/models/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx \
+    /app/models/mobilenetv2-12.onnx
+
 ENV CV_INDEX_PATH=/data/index.pkl
 ENV CV_MIN_SIMILARITY=0.72
 ENV CV_MIN_SIMILARITY_GAP=0.035
