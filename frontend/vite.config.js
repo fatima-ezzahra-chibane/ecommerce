@@ -1,23 +1,27 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
-const isTest = !!process.env.VITEST;
+export default defineConfig(async () => {
+  const plugins = [react()];
 
-export default defineConfig({
-  plugins: [
-    react(),
-    // Tailwind v4 peut faire échouer Vitest sur CI
-    ...(isTest ? [] : [tailwindcss()]),
-  ],
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
-    css: false,
-  },
+  // Tailwind seulement hors Vitest (évite les plantages CI)
+  if (!process.env.VITEST) {
+    const { default: tailwindcss } = await import('@tailwindcss/vite');
+    plugins.push(tailwindcss());
+  }
+
+  return {
+    plugins,
+    server: {
+      host: '0.0.0.0',
+      port: 5173,
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.js',
+      css: false,
+      pool: 'forks',
+    },
+  };
 });
