@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 
-const FALLBACK = 'https://picsum.photos/seed/vivid-product/400/400';
+const FALLBACK =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">' +
+      '<rect fill="#f1f5f9" width="400" height="400"/>' +
+      '<text x="200" y="205" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="18">Image indisponible</text>' +
+      '</svg>'
+  );
 
 function isLikelyImageUrl(src) {
   if (!src || typeof src !== 'string') return false;
   const s = src.trim().toLowerCase();
   if (s.startsWith('data:image/')) return true;
   if (s.includes('/@vite/') || s.includes('__vite') || s.includes('[plugin:')) return false;
-  if (s.startsWith('http://localhost:5173') && !s.includes('/storage/')) return false;
   return (
     /\.(jpe?g|png|webp|gif|svg|avif)(\?|$)/i.test(s)
     || s.includes('/storage/')
@@ -18,11 +25,17 @@ function isLikelyImageUrl(src) {
 }
 
 /**
- * Image produit — même rendu partout (upload admin, URL externe, placeholder).
+ * Image produit — même rendu partout (boutique, favoris, panier, admin).
  */
 export default function ProductImage({ src, alt, className = '', imgClassName = '' }) {
-  const initial = isLikelyImageUrl(src) ? src : FALLBACK;
+  const resolved = resolveMediaUrl(src);
+  const initial = isLikelyImageUrl(resolved || src) ? (resolved || src) : FALLBACK;
   const [current, setCurrent] = useState(initial);
+
+  useEffect(() => {
+    const next = resolveMediaUrl(src);
+    setCurrent(isLikelyImageUrl(next || src) ? (next || src) : FALLBACK);
+  }, [src]);
 
   return (
     <img

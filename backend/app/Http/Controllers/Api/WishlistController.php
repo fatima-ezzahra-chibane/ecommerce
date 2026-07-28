@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WishlistItemResource;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,9 @@ class WishlistController extends Controller
             ->with('product.category')
             ->get();
 
-        return response()->json(['data' => $items]);
+        return response()->json([
+            'data' => WishlistItemResource::collection($items),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -27,7 +30,12 @@ class WishlistController extends Controller
             'product_id' => $validated['product_id'],
         ]);
 
-        return response()->json(['message' => 'Ajouté aux favoris.', 'data' => $item->load('product')], 201);
+        $item->load('product.category');
+
+        return response()->json([
+            'message' => 'Ajouté aux favoris.',
+            'data' => new WishlistItemResource($item),
+        ], 201);
     }
 
     public function destroy(Request $request, int $productId): JsonResponse
