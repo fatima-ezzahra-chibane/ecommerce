@@ -28,6 +28,10 @@ class AdminUserController extends Controller
         $user = User::findOrFail($id);
         $user->update(['is_active' => ! $user->is_active]);
 
+        if (! $user->is_active) {
+            $user->tokens()->delete();
+        }
+
         return response()->json([
             'message' => $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé.',
             'data' => new UserResource($user),

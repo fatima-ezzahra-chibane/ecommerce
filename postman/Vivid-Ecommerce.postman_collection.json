@@ -341,7 +341,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"phone\": \"0600000000\"\n}"
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test{{$timestamp}}@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"phone\": \"0600000000\"\n}"
             },
             "url": "{{base_url}}/register"
           }
@@ -569,7 +569,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_address\": \"123 Avenue Hassan II, Casablanca\",\n  \"payment_method\": \"card\",\n  \"coupon_code\": \"WELCOME10\"\n}"
+              "raw": "{\n  \"shipping_address\": \"123 Avenue Hassan II, Casablanca\",\n  \"payment_method\": \"card\"\n}"
             },
             "url": "{{base_url}}/orders"
           }

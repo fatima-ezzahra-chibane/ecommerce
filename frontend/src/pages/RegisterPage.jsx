@@ -10,8 +10,12 @@ export default function RegisterPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-    await register(form);
-    navigate('/shop');
+    try {
+      await register(form);
+      navigate('/shop');
+    } catch {
+      /* toast géré par l'intercepteur API */
+    }
   };
 
   return (

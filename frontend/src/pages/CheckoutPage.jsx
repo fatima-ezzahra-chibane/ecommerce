@@ -2,18 +2,21 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../services';
 import { useToast } from '../contexts/ToastContext';
+import { useCart } from '../contexts/CartContext';
 
 export default function CheckoutPage() {
   const [form, setForm] = useState({ shipping_address: '', payment_method: 'card', coupon_code: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { refresh } = useCart();
 
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await orderService.create(form);
+      await refresh();
       navigate('/orders');
     } catch (err) {
       showToast(err.response?.data?.message || 'Erreur lors de la commande.', 'error');

@@ -13,9 +13,11 @@ class DashboardController extends Controller
 {
     public function stats(): JsonResponse
     {
-        $revenue = Order::whereIn('status', ['delivered', 'shipped', 'processing'])->sum('total_price');
+        $paidStatuses = ['delivered', 'shipped', 'processing'];
+        $revenue = Order::whereIn('status', $paidStatuses)->sum('total_price');
 
-        $monthlySales = Order::whereYear('created_at', (int) date('Y'))
+        $monthlySales = Order::whereIn('status', $paidStatuses)
+            ->whereYear('created_at', (int) date('Y'))
             ->get(['total_price', 'created_at'])
             ->groupBy(fn (Order $order) => $order->created_at->month)
             ->map(fn ($orders, $month) => [

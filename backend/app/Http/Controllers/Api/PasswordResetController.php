@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -58,7 +59,7 @@ class PasswordResetController extends Controller
             return response()->json(['message' => 'Lien invalide ou expiré.'], 422);
         }
 
-        if (now()->diffInMinutes($record->created_at) > 60) {
+        if (Carbon::parse($record->created_at)->addMinutes(60)->isPast()) {
             return response()->json(['message' => 'Le lien a expiré.'], 422);
         }
 

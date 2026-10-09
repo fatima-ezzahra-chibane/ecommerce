@@ -23,7 +23,13 @@ const STATUS_LABELS = {
   cancelled: 'Annulée',
 };
 
-const STATUS_COLORS = ['#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#f87171'];
+const STATUS_COLORS = {
+  pending: '#fbbf24',
+  processing: '#60a5fa',
+  shipped: '#a78bfa',
+  delivered: '#34d399',
+  cancelled: '#f87171',
+};
 
 const MONTHS = ['', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -48,7 +54,7 @@ export default function AdminDashboardPage() {
     labels: statusEntries.map(([s]) => STATUS_LABELS[s] || s),
     datasets: [{
       data: statusEntries.map(([, c]) => c),
-      backgroundColor: STATUS_COLORS,
+      backgroundColor: statusEntries.map(([s]) => STATUS_COLORS[s] || '#9ca3af'),
       borderWidth: 0,
     }],
   };
