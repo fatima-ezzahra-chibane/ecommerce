@@ -43,7 +43,8 @@ export default function AdminCouponsPage() {
         <form onSubmit={save} className="bg-white p-5 rounded-xl shadow-sm mb-6 grid md:grid-cols-2 gap-4 max-w-2xl">
           <input placeholder="Code (ex: SUMMER20)" required className="border rounded-lg px-3 py-2"
             value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} />
-          <input placeholder="Réduction" type="number" step="0.01" min="0.01"
+          <input placeholder={form.type === 'percent' ? 'Réduction en % (1 à 100)' : 'Réduction en DH'}
+            type="number" step="0.01" min="0.01"
             max={form.type === 'percent' ? 100 : undefined} required className="border rounded-lg px-3 py-2"
             value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
           <select className="border rounded-lg px-3 py-2" value={form.type}
