@@ -10,7 +10,7 @@ class IndexProductVisualsCommand extends Command
 {
     protected $signature = 'products:index-visuals {--fresh : Réinitialiser l\'index avant indexation}';
 
-    protected $description = 'Indexe les images produits dans le service computer vision (OpenCV ORB)';
+    protected $description = 'Indexe les images produits dans le service computer vision (MobileNetV2 ONNX)';
 
     public function handle(VisionSearchClient $vision): int
     {

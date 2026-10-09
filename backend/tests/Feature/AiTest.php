@@ -21,19 +21,8 @@ class AiTest extends TestCase
         $response = $this->getJson('/api/v1/ai/status');
 
         $response->assertOk()
-            ->assertJsonPath('data.features.chatbot', true)
+            ->assertJsonPath('data.features.image_search', true)
             ->assertJsonPath('data.features.recommendations', true);
-    }
-
-    public function test_chatbot_local_reply_without_openai(): void
-    {
-        $response = $this->postJson('/api/v1/ai/chat', [
-            'message' => 'Quels sont les délais de livraison ?',
-        ]);
-
-        $response->assertOk()
-            ->assertJsonPath('data.source', 'local')
-            ->assertJsonStructure(['data' => ['reply', 'products', 'source']]);
     }
 
     public function test_product_recommendations_returns_products(): void
@@ -89,7 +78,7 @@ class AiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.product_id', null)
             ->assertJsonCount(0, 'data.products')
-            ->assertJsonPath('data.source', 'opencv_orb');
+            ->assertJsonPath('data.source', 'mobilenetv2_onnx');
     }
 
     public function test_image_search_returns_single_product_on_match(): void

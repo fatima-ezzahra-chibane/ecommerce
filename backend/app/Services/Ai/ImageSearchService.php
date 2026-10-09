@@ -38,7 +38,7 @@ class ImageSearchService
                 'match_count' => (int) ($result['match_count'] ?? 0),
                 'confidence' => $confidence,
                 'products' => collect(),
-                'source' => 'opencv_orb',
+                'source' => 'mobilenetv2_onnx',
             ];
         }
 
@@ -49,7 +49,7 @@ class ImageSearchService
             'match_count' => (int) ($result['match_count'] ?? 0),
             'confidence' => $confidence,
             'products' => $product ? collect([$product]) : collect(),
-            'source' => 'opencv_orb',
+            'source' => 'mobilenetv2_onnx',
         ];
     }
 }

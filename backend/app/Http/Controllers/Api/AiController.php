@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use App\Services\Ai\ChatbotService;
 use App\Services\Ai\ImageSearchService;
-use App\Services\Ai\OpenAiClient;
 use App\Services\Ai\RecommendationService;
 use App\Services\Ai\VisionSearchClient;
 use Illuminate\Http\JsonResponse;
@@ -17,9 +15,7 @@ class AiController extends Controller
 {
     public function __construct(
         private RecommendationService $recommendations,
-        private ChatbotService $chatbot,
         private ImageSearchService $imageSearch,
-        private OpenAiClient $openAi,
         private VisionSearchClient $vision,
     ) {}
 
@@ -29,10 +25,8 @@ class AiController extends Controller
 
         return response()->json([
             'data' => [
-                'openai_configured' => $this->openAi->isConfigured(),
                 'cv_service' => $cvStats,
                 'features' => [
-                    'chatbot' => true,
                     'recommendations' => true,
                     'image_search' => ($cvStats['status'] ?? '') === 'ok',
                 ],
@@ -57,30 +51,6 @@ class AiController extends Controller
 
         return response()->json([
             'data' => ProductResource::collection($products),
-        ]);
-    }
-
-    public function chat(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'message' => 'required|string|max:2000',
-            'history' => 'nullable|array|max:10',
-            'history.*.role' => 'required_with:history|in:user,assistant',
-            'history.*.content' => 'required_with:history|string|max:2000',
-        ]);
-
-        $result = $this->chatbot->reply(
-            $request->user(),
-            $validated['message'],
-            $validated['history'] ?? []
-        );
-
-        return response()->json([
-            'data' => [
-                'reply' => $result['reply'],
-                'source' => $result['source'],
-                'products' => ProductResource::collection($result['products']),
-            ],
         ]);
     }
 

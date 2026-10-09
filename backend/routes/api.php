@@ -32,7 +32,6 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/ai/status', [AiController::class, 'status']);
     Route::middleware('throttle:20,1')->group(function () {
-        Route::post('/ai/chat', [AiController::class, 'chat']);
         Route::post('/ai/search-image', [AiController::class, 'searchImage']);
     });
     Route::get('/ai/recommendations', [AiController::class, 'recommendations']);

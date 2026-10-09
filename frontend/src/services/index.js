@@ -54,7 +54,6 @@ export const orderService = {
 };
 
 export const aiService = {
-  status: () => api.get('/ai/status'),
   recommendations: (params) => api.get('/ai/recommendations', { params }),
   productRecommendations: (productId) => api.get(`/products/${productId}/recommendations`),
   searchImage: (file) => {

@@ -41,7 +41,7 @@ for i in $(seq 1 24); do
   sleep 2
 done
 
-echo "==> Indexation images produits (OpenCV ORB)..."
+echo "==> Indexation images produits (MobileNetV2 ONNX)..."
 "${DC[@]}" exec backend php artisan products:index-visuals --fresh 2>/dev/null || echo "Index CV ignoré (service non prêt)."
 
 OWNER="${SUDO_USER:-$(whoami)}"

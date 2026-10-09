@@ -35,11 +35,6 @@ return [
         ],
     ],
 
-    'openai' => [
-        'key' => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
-    ],
-
     'cv' => [
         'url' => env('CV_SERVICE_URL', 'http://cv-service:8090'),
     ],
