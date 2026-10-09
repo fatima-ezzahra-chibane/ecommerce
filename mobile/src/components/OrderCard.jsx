@@ -55,7 +55,7 @@ export default function OrderCard({ order }) {
               <View key={item.id} style={styles.itemRow}>
                 <Image source={{ uri: img }} style={styles.itemImg} />
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName} numberOfLines={1}>{item.product?.name}</Text>
+                  <Text style={styles.itemName} numberOfLines={1}>{item.product_name || item.product?.name}</Text>
                   <Text style={styles.itemQty}>Qté : {item.quantity}</Text>
                 </View>
                 <Text style={styles.itemPrice}>{formatPrice(item.price)}</Text>

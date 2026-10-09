@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CartService
 {
+    /** Un seul panier par client (index unique carts.user_id). */
     public function getOrCreateCart(User $user): Cart
     {
-        return Cart::firstOrCreate(['user_id' => $user->id]);
+        return $user->cart()->firstOrCreate();
     }
 
     public function getCart(User $user): Cart

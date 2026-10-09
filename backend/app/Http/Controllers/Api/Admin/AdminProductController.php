@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Services\Ai\VisionSearchClient;
@@ -89,7 +90,19 @@ class AdminProductController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $this->products->delete(Product::findOrFail($id));
+        $product = Product::findOrFail($id);
+
+        if ($product->orderItems()->exists()) {
+            $product->update(['status' => 'inactive']);
+            CartItem::where('product_id', $product->id)->delete();
+
+            return response()->json([
+                'message' => 'Produit déjà commandé : désactivé au lieu d\'être supprimé (historique conservé).',
+                'data' => new ProductResource($product->fresh('category')),
+            ]);
+        }
+
+        $this->products->delete($product);
 
         return response()->json(['message' => 'Produit supprimé.']);
     }

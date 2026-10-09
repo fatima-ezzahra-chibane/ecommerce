@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Models\Category;
+use App\Models\OrderItem;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,7 +51,15 @@ class AdminCategoryController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $this->categories->delete(Category::findOrFail($id));
+        $category = Category::findOrFail($id);
+
+        if (OrderItem::whereHas('product', fn ($q) => $q->where('category_id', $category->id))->exists()) {
+            return response()->json([
+                'message' => 'Impossible de supprimer cette catégorie : elle contient des produits déjà commandés. Désactivez ces produits à la place.',
+            ], 422);
+        }
+
+        $this->categories->delete($category);
 
         return response()->json(['message' => 'Catégorie supprimée.']);
     }

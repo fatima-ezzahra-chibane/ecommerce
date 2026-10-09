@@ -49,7 +49,7 @@ export default function AdminOrdersPage() {
             {order.items?.length > 0 && (
               <ul className="mt-3 text-sm text-gray-600 border-t pt-3">
                 {order.items.map((item) => (
-                  <li key={item.id}>×{item.quantity} {item.product?.name} — {formatPrice(item.price)}</li>
+                  <li key={item.id}>×{item.quantity} {item.product_name || item.product?.name} — {formatPrice(item.price)}</li>
                 ))}
               </ul>
             )}

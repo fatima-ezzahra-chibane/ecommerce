@@ -57,12 +57,12 @@ export default function OrderCard({ order, showDetailLink = false }) {
                 <div className="w-14 h-14 rounded-2xl border border-gray-100 flex items-center justify-center shrink-0 p-1 bg-white">
                   <ProductImage
                     src={item.product?.image}
-                    alt={item.product?.name}
+                    alt={item.product_name || item.product?.name}
                     imgClassName="w-12 h-12 object-contain"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{item.product?.name}</p>
+                  <p className="font-medium text-gray-900 truncate">{item.product_name || item.product?.name}</p>
                   <p className="text-sm text-gray-500">Qté : {item.quantity}</p>
                 </div>
                 <p className="font-bold text-gray-900 shrink-0">{formatPrice(item.price)}</p>

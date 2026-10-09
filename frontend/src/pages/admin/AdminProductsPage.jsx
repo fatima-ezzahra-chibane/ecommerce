@@ -85,7 +85,7 @@ export default function AdminProductsPage() {
   };
 
   const remove = async (id) => {
-    if (!confirm('Supprimer ce produit ?')) return;
+    if (!confirm('Supprimer ce produit ?\n(S\'il a déjà été commandé, il sera désactivé pour conserver l\'historique.)')) return;
     await adminService.deleteProduct(id);
     load();
   };

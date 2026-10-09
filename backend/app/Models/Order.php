@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Order extends Model
 {
     protected $fillable = [
-        'user_id', 'total_price', 'status', 'shipping_address',
+        'user_id', 'coupon_id', 'total_price', 'status', 'shipping_address',
         'coupon_code', 'discount',
     ];
 
@@ -25,6 +25,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function items(): HasMany

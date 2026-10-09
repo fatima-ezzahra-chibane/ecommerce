@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Coupon;
+use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -83,6 +84,100 @@ class CheckoutTest extends TestCase
             'total_price' => 90,
             'coupon_code' => 'TEST10',
             'discount' => 10,
+        ]);
+    }
+
+    public function test_order_keeps_product_name_and_coupon_link(): void
+    {
+        $this->actingAsUser();
+        $product = Product::factory()->create(['name' => 'Robe été', 'price' => 200, 'stock' => 5]);
+        $coupon = Coupon::create(['code' => 'FIX50', 'discount' => 50, 'type' => 'fixed', 'is_active' => true]);
+
+        $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->api('POST', '/orders', [
+            'shipping_address' => 'Adresse test',
+            'payment_method' => 'card',
+            'coupon_code' => 'FIX50',
+        ])->assertCreated();
+
+        $product->update(['name' => 'Nouveau nom', 'price' => 999]);
+
+        $this->assertDatabaseHas('orders', [
+            'coupon_id' => $coupon->id,
+            'coupon_code' => 'FIX50',
+            'discount' => 50,
+            'total_price' => 150,
+        ]);
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'product_name' => 'Robe été',
+            'price' => 200,
+        ]);
+    }
+
+    public function test_checkout_rejects_unknown_coupon(): void
+    {
+        $this->checkoutWithCoupon('INCONNU', 100)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.coupon_code.0', "Ce code promo n'existe pas.");
+    }
+
+    public function test_checkout_rejects_expired_coupon(): void
+    {
+        Coupon::create([
+            'code' => 'OLD', 'discount' => 10, 'type' => 'percent',
+            'is_active' => true, 'expiration_date' => now()->subDay(),
+        ]);
+
+        $this->checkoutWithCoupon('OLD', 100)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.coupon_code.0', 'Ce code promo a expiré.');
+    }
+
+    public function test_checkout_rejects_coupon_when_usage_limit_reached(): void
+    {
+        $coupon = Coupon::create([
+            'code' => 'ONCE', 'discount' => 10, 'type' => 'percent',
+            'is_active' => true, 'usage_limit' => 1,
+        ]);
+        Order::create([
+            'user_id' => $this->createUser()->id,
+            'coupon_id' => $coupon->id,
+            'coupon_code' => 'ONCE',
+            'total_price' => 90,
+            'discount' => 10,
+            'shipping_address' => 'Adresse',
+        ]);
+
+        $this->checkoutWithCoupon('ONCE', 100)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.coupon_code.0', "Ce code promo a atteint sa limite d'utilisation.");
+    }
+
+    public function test_checkout_rejects_coupon_below_min_order_amount(): void
+    {
+        Coupon::create([
+            'code' => 'BIG', 'discount' => 20, 'type' => 'fixed',
+            'is_active' => true, 'min_order_amount' => 500,
+        ]);
+
+        $this->checkoutWithCoupon('BIG', 100)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['coupon_code']);
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    private function checkoutWithCoupon(string $code, float $price)
+    {
+        $this->actingAsUser();
+        $product = Product::factory()->create(['price' => $price, 'stock' => 5]);
+        $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 1]);
+
+        return $this->api('POST', '/orders', [
+            'shipping_address' => 'Adresse test',
+            'payment_method' => 'card',
+            'coupon_code' => $code,
         ]);
     }
 

@@ -28,32 +28,28 @@ class OrderService
         }
 
         return DB::transaction(function () use ($user, $cart, $data) {
-            $subtotal = $cart->items->sum(fn ($item) => $item->product->price * $item->quantity);
-            $discount = 0;
-            $couponCode = null;
-
-            if (! empty($data['coupon_code'])) {
-                $coupon = Coupon::where('code', $data['coupon_code'])->first();
-                if ($coupon && $coupon->isValid()) {
-                    $couponCode = $coupon->code;
-                    $discount = $coupon->type === 'percent'
-                        ? $subtotal * ($coupon->discount / 100)
-                        : $coupon->discount;
-                }
-            }
+            $subtotal = (float) $cart->items->sum(fn ($item) => $item->product->price * $item->quantity);
+            $coupon = $this->resolveCoupon($data['coupon_code'] ?? null, $subtotal);
+            $discount = $coupon?->discountFor($subtotal) ?? 0;
 
             $total = max(0, $subtotal - $discount);
 
             $order = $this->orders->create([
                 'user_id' => $user->id,
+                'coupon_id' => $coupon?->id,
                 'total_price' => $total,
                 'status' => 'pending',
                 'shipping_address' => $data['shipping_address'],
-                'coupon_code' => $couponCode,
+                'coupon_code' => $coupon?->code,
                 'discount' => $discount,
             ]);
 
             foreach ($cart->items as $item) {
+                if ($item->product->status !== 'active') {
+                    throw ValidationException::withMessages([
+                        'cart' => ["{$item->product->name} n'est plus disponible."],
+                    ]);
+                }
                 if ($item->product->stock < $item->quantity) {
                     throw ValidationException::withMessages([
                         'stock' => ["Stock insuffisant pour {$item->product->name}."],
@@ -63,6 +59,7 @@ class OrderService
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
                     'quantity' => $item->quantity,
                     'price' => $item->product->price,
                 ]);
@@ -82,6 +79,24 @@ class OrderService
 
             return $order->load(['items.product', 'payment']);
         });
+    }
+
+    private function resolveCoupon(?string $code, float $subtotal): ?Coupon
+    {
+        $code = trim((string) $code);
+        if ($code === '') {
+            return null;
+        }
+
+        // Verrou : deux commandes simultanées ne peuvent pas dépasser usage_limit
+        $coupon = Coupon::where('code', $code)->lockForUpdate()->first();
+        $reason = $coupon ? $coupon->rejectionReason($subtotal) : 'Code promo invalide.';
+
+        if ($reason !== null) {
+            throw ValidationException::withMessages(['coupon_code' => [$reason]]);
+        }
+
+        return $coupon;
     }
 
     public function userOrders(User $user): LengthAwarePaginator
