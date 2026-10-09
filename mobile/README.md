@@ -6,6 +6,15 @@ Application mobile connectée à la même API Laravel que le frontend web.
 
 ### 1. Stack Docker (dans la VM)
 
+Première fois (installation complète : dépendances, tables, données de démo, index CV) :
+
+```bash
+cd ~/ecommerce
+./setup.sh
+```
+
+Les fois suivantes :
+
 ```bash
 cd ~/ecommerce
 docker compose up -d

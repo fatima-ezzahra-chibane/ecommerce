@@ -2,7 +2,7 @@
 
 Plateforme e-commerce full-stack : **Laravel 12 + React 19 + Expo + CV (MobileNetV2) + Docker**.
 
-**Statut PFE : terminé** — voir [`docs/SOUTENANCE.md`](docs/SOUTENANCE.md).
+**Statut PFE : terminé.**
 
 ## Stack
 
@@ -17,15 +17,45 @@ Plateforme e-commerce full-stack : **Laravel 12 + React 19 + Expo + CV (MobileNe
 
 ## Démarrage
 
+### Prérequis
+
+- **Docker** + **Docker Compose** (aucune installation de PHP, Node ou Python nécessaire)
+- Pour le mobile : un téléphone avec l'application **Expo Go**, connecté au **même WiFi** que le PC
+
+### 1. Web + API + base de données + CV (première fois)
+
 ```bash
+git clone https://github.com/fatima-ezzahra-chibane/ecommerce.git
+cd ecommerce
 chmod +x setup.sh
 ./setup.sh
 ```
+
+`setup.sh` démarre les 6 services (backend, nginx, frontend, mysql, phpmyadmin, cv-service), installe les dépendances, crée les tables, insère les données de démo et indexe les images produits.
 
 Démarrage rapide (projet déjà installé) :
 
 ```bash
 docker compose up -d --no-build
+```
+
+### 2. Application mobile (après l'étape 1)
+
+```bash
+cd mobile
+chmod +x start.sh
+API_HOST_IP=VOTRE_IP ./start.sh
+```
+
+- `VOTRE_IP` = adresse IP du PC sur le WiFi (ex. `192.168.1.10`, via `hostname -I` sous Linux ou `ipconfig` sous Windows)
+- Scanner le QR code affiché avec **Expo Go**
+- Machine virtuelle VirtualBox : voir [`mobile/README.md`](mobile/README.md) (IP du PC hôte + redirection des ports 8080, 8081, 19000)
+
+### 3. Arrêter
+
+```bash
+docker compose down        # services web / API / BDD / CV
+# mobile : Ctrl+C dans le terminal de start.sh
 ```
 
 | URL | Service |
@@ -108,13 +138,7 @@ Cypress reste volontairement **hors CI** (trop lourd sur le runner).
 
 ## Phase 3 — Mobile React Native (terminée)
 
-```bash
-cd mobile
-chmod +x start.sh
-API_HOST_IP=VOTRE_IP ./start.sh
-```
-
-Voir [`mobile/README.md`](mobile/README.md).
+Lancement : voir [Démarrage → Application mobile](#2-application-mobile-après-létape-1) et [`mobile/README.md`](mobile/README.md).
 
 ## Phase 4 — IA & contact (terminée)
 
@@ -149,10 +173,5 @@ CV : [`cv-service/README.md`](cv-service/README.md).
 ├── mobile/           React Native (Expo)
 ├── cv-service/       Microservice CV
 ├── docker/           Dockerfiles + Nginx
-├── docs/             Documentation PFE
 └── docker-compose.yml
 ```
-
-- Soutenance : [`docs/SOUTENANCE.md`](docs/SOUTENANCE.md)
-- Audit : [`docs/AUDIT_COMPLET.md`](docs/AUDIT_COMPLET.md)
-- BDD : [`docs/BASE_DE_DONNEES.md`](docs/BASE_DE_DONNEES.md)
