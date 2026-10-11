@@ -134,6 +134,31 @@ class AdminManagementTest extends TestCase
         $this->assertDatabaseMissing('categories', ['id' => $id]);
     }
 
+    public function test_category_names_must_be_unique(): void
+    {
+        $first = $this->api('POST', '/admin/categories', ['name' => 'Mode'])->assertCreated()->json('data.id');
+        $second = $this->api('POST', '/admin/categories', ['name' => 'Sport'])->assertCreated()->json('data.id');
+
+        $this->api('POST', '/admin/categories', ['name' => 'mode'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['name']);
+
+        $this->api('PUT', "/admin/categories/{$second}", ['name' => 'Mode'])->assertUnprocessable();
+        $this->api('PUT', "/admin/categories/{$first}", ['name' => 'Mode'])->assertOk();
+    }
+
+    public function test_deleting_product_removes_its_image_file(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('products/photo.jpg', 'img');
+        $product = Product::factory()->create(['image' => '/storage/products/photo.jpg']);
+
+        $this->api('DELETE', "/admin/products/{$product->id}")->assertOk();
+
+        $this->assertDatabaseMissing('products', ['id' => $product->id]);
+        Storage::disk('public')->assertMissing('products/photo.jpg');
+    }
+
     public function test_category_name_is_required(): void
     {
         $this->api('POST', '/admin/categories', [])

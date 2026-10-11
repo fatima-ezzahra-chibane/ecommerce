@@ -12,8 +12,6 @@ interface OrderRepositoryInterface
 
     public function paginateAll(int $perPage = 15): LengthAwarePaginator;
 
-    public function findById(int $id): ?Order;
-
     public function create(array $data): Order;
 
     public function updateStatus(Order $order, string $status): Order;

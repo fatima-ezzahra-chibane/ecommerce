@@ -67,17 +67,57 @@ class OrderService
                 $item->product->decrement('stock', $item->quantity);
             }
 
+            $paymentMethod = $data['payment_method'] ?? 'card';
+
+            // Paiement simulé : carte/PayPal encaissés tout de suite, espèces à la livraison
             Payment::create([
                 'order_id' => $order->id,
-                'payment_method' => $data['payment_method'] ?? 'card',
+                'payment_method' => $paymentMethod,
                 'amount' => $total,
-                'status' => 'completed',
+                'status' => $paymentMethod === 'cash' ? 'pending' : 'completed',
                 'transaction_id' => 'TXN-'.uniqid(),
             ]);
 
             $this->cartService->clear($user);
 
             return $order->load(['items.product', 'payment']);
+        });
+    }
+
+    /**
+     * Livrée et annulée sont des statuts finaux.
+     * Annulation : stock restitué, paiement remboursé (ou échoué s'il n'avait pas été encaissé).
+     * Livraison : un paiement à la livraison devient encaissé.
+     */
+    public function changeStatus(Order $order, string $status): Order
+    {
+        if ($order->status === $status) {
+            return $order->fresh(['items.product', 'payment']);
+        }
+
+        if (in_array($order->status, ['delivered', 'cancelled'], true)) {
+            throw ValidationException::withMessages([
+                'status' => ['Une commande livrée ou annulée ne peut plus changer de statut.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($order, $status) {
+            $order->load(['items.product', 'payment']);
+
+            if ($status === 'cancelled') {
+                foreach ($order->items as $item) {
+                    $item->product?->increment('stock', $item->quantity);
+                }
+                $order->payment?->update([
+                    'status' => $order->payment->status === 'completed' ? 'refunded' : 'failed',
+                ]);
+            }
+
+            if ($status === 'delivered' && $order->payment?->status === 'pending') {
+                $order->payment->update(['status' => 'completed']);
+            }
+
+            return $this->orders->updateStatus($order, $status);
         });
     }
 

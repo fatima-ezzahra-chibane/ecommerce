@@ -7,11 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface CategoryRepositoryInterface
 {
-    public function all(): Collection;
-
     public function allWithCount(): Collection;
-
-    public function findById(int $id): ?Category;
 
     public function create(array $data): Category;
 

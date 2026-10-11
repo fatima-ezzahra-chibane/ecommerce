@@ -62,9 +62,20 @@ class VisionSearchClient
         }
     }
 
-  /**
-   * @return array{product_id: ?int, match_count: int, confidence: float}
-   */
+    public function clearIndex(): bool
+    {
+        try {
+            return Http::timeout(10)->delete($this->baseUrl().'/index')->successful();
+        } catch (\Throwable $e) {
+            Log::warning('CV index clear failed', ['message' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
+     * @return array{product_id: ?int, match_count: int, confidence: float}
+     */
     public function search(UploadedFile $image): array
     {
         $response = Http::timeout(60)

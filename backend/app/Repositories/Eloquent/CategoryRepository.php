@@ -8,19 +8,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    public function all(): Collection
-    {
-        return Category::all();
-    }
-
     public function allWithCount(): Collection
     {
         return Category::withCount('products')->get();
-    }
-
-    public function findById(int $id): ?Category
-    {
-        return Category::find($id);
     }
 
     public function create(array $data): Category

@@ -24,11 +24,6 @@ class OrderRepository implements OrderRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function findById(int $id): ?Order
-    {
-        return Order::with(['items.product', 'payment'])->find($id);
-    }
-
     public function create(array $data): Order
     {
         return Order::create($data);

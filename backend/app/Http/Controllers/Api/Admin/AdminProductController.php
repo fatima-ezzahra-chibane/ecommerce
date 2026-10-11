@@ -102,6 +102,9 @@ class AdminProductController extends Controller
             ]);
         }
 
+        if ($product->image && str_contains($product->image, '/storage/products/')) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $product->image));
+        }
         $this->products->delete($product);
 
         return response()->json(['message' => 'Produit supprimé.']);

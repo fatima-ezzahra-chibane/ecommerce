@@ -15,7 +15,22 @@ Recherche de produits par **photo** via embeddings **MobileNetV2 (ONNX)**.
 3. Le service compare les embeddings
 4. Retourne **1 `product_id`** si match fiable, sinon **`null`**
 
-Le modèle `mobilenetv2-12.onnx` est **embarqué dans l’image Docker** (fichier gitignoré en local).
+Le modèle `mobilenetv2-12.onnx` est **téléchargé et embarqué dans l’image Docker** au build (aucun fichier modèle dans le dépôt).
+
+## Endpoints
+
+| Méthode | Route | Rôle |
+|---------|-------|------|
+| `GET` | `/health` | État + nombre de produits indexés |
+| `POST` | `/index/url` | Indexer l'image d'un produit (`product_id`, `image_url`) |
+| `POST` | `/search` | Rechercher un produit à partir d'une photo (`file`) |
+| `DELETE` | `/index` | Vider l'index |
+
+## Tests
+
+```bash
+docker compose run --rm -v ./cv-service/tests:/app/tests cv-service python -m unittest discover -s tests -t . -v
+```
 
 ## Démarrage
 

@@ -27,17 +27,8 @@ def health():
 async def index_url(body: IndexUrlBody):
     ok = await matcher.index_from_url(body.product_id, str(body.image_url))
     if not ok:
-        raise HTTPException(422, "Impossible d'indexer l'image (pas assez de descripteurs visuels).")
+        raise HTTPException(422, "Impossible de télécharger ou d'analyser l'image.")
     return {"product_id": body.product_id, "indexed": True}
-
-
-@app.post("/index/file")
-async def index_file(product_id: int, file: UploadFile = File(...)):
-    data = await file.read()
-    ok = matcher.index_from_bytes(product_id, data)
-    if not ok:
-        raise HTTPException(422, "Impossible d'indexer l'image.")
-    return {"product_id": product_id, "indexed": True}
 
 
 @app.post("/search")

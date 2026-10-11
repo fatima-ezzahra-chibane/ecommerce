@@ -7,13 +7,15 @@ use App\Http\Resources\WishlistItemResource;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class WishlistController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $items = Wishlist::where('user_id', $request->user()->id)
-            ->with('product.category')
+            ->whereHas('product', fn ($q) => $q->active())
+            ->with(['product' => fn ($q) => $q->with('category')->withAvg('reviews', 'rating')])
             ->get();
 
         return response()->json([
@@ -23,7 +25,11 @@ class WishlistController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate(['product_id' => 'required|exists:products,id']);
+        $validated = $request->validate([
+            'product_id' => ['required', Rule::exists('products', 'id')->where('status', 'active')],
+        ], [
+            'product_id.exists' => 'Ce produit n\'est pas disponible.',
+        ]);
 
         $item = Wishlist::firstOrCreate([
             'user_id' => $request->user()->id,

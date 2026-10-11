@@ -10,7 +10,7 @@ class ProductRepository implements ProductRepositoryInterface
 {
     public function paginate(array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
-        $query = Product::query()->with(['category'])->active();
+        $query = Product::query()->with(['category'])->withAvg('reviews', 'rating')->active();
 
         if (! empty($filters['search'])) {
             $search = $filters['search'];

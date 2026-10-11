@@ -103,4 +103,34 @@ class AiTest extends TestCase
             ->assertJsonCount(1, 'data.products')
             ->assertJsonPath('data.products.0.id', $product->id);
     }
+
+    public function test_image_search_ignores_match_on_inactive_product(): void
+    {
+        $product = Product::factory()->create(['status' => 'inactive']);
+
+        Http::fake([
+            'cv-service:8090/health' => Http::response(['status' => 'ok'], 200),
+            'cv-service:8090/search' => Http::response(['product_id' => $product->id, 'match_count' => 1, 'confidence' => 0.95], 200),
+        ]);
+
+        $this->postJson('/api/v1/ai/search-image', [
+            'image' => \Illuminate\Http\UploadedFile::fake()->image('query.jpg', 200, 200),
+        ])->assertOk()
+            ->assertJsonPath('data.product_id', null)
+            ->assertJsonCount(0, 'data.products');
+    }
+
+    public function test_image_search_returns_503_when_cv_service_is_down_or_fails(): void
+    {
+        $image = fn () => ['image' => \Illuminate\Http\UploadedFile::fake()->image('query.jpg', 200, 200)];
+
+        Http::fake(['cv-service:8090/*' => Http::response(null, 500)]);
+        $this->postJson('/api/v1/ai/search-image', $image())->assertStatus(503)->assertJsonPath('data.source', 'unavailable');
+
+        Http::fake([
+            'cv-service:8090/health' => Http::response(['status' => 'ok'], 200),
+            'cv-service:8090/search' => Http::response(['detail' => 'boom'], 500),
+        ]);
+        $this->postJson('/api/v1/ai/search-image', $image())->assertStatus(503);
+    }
 }

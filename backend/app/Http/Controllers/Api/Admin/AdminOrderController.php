@@ -7,11 +7,15 @@ use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Repositories\Contracts\OrderRepositoryInterface;
+use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 
 class AdminOrderController extends Controller
 {
-    public function __construct(private OrderRepositoryInterface $orders) {}
+    public function __construct(
+        private OrderRepositoryInterface $orders,
+        private OrderService $orderService,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -30,7 +34,7 @@ class AdminOrderController extends Controller
     public function updateStatus(UpdateOrderStatusRequest $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        $updated = $this->orders->updateStatus($order, $request->validated()['status']);
+        $updated = $this->orderService->changeStatus($order, $request->validated()['status']);
 
         return response()->json([
             'message' => 'Statut de la commande mis à jour.',

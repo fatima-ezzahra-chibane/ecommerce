@@ -21,8 +21,18 @@ class ProductResource extends JsonResource
             'status' => $this->status,
             'category' => new CategoryResource($this->whenLoaded('category')),
             'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
-            'average_rating' => $this->whenLoaded('reviews', fn () => round($this->reviews->avg('rating'), 1)),
+            'average_rating' => $this->averageRating(),
             'created_at' => $this->created_at,
         ];
+    }
+
+    /** Fiche produit : avis chargés ; listes : withAvg('reviews', 'rating'). */
+    private function averageRating(): ?float
+    {
+        if ($this->relationLoaded('reviews')) {
+            return $this->reviews->isEmpty() ? null : round($this->reviews->avg('rating'), 1);
+        }
+
+        return $this->reviews_avg_rating !== null ? round((float) $this->reviews_avg_rating, 1) : null;
     }
 }

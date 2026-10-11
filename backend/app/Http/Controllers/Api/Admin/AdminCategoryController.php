@@ -10,6 +10,7 @@ use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminCategoryController extends Controller
 {
@@ -23,7 +24,7 @@ class AdminCategoryController extends Controller
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->uniqueSlug($validated['name']);
 
         return response()->json([
             'message' => 'Catégorie créée.',
@@ -39,7 +40,7 @@ class AdminCategoryController extends Controller
             'description' => 'nullable|string',
         ]);
         if (isset($validated['name'])) {
-            $validated['slug'] = Str::slug($validated['name']);
+            $validated['slug'] = $this->uniqueSlug($validated['name'], $category->id);
         }
         $updated = $this->categories->update($category, $validated);
 
@@ -62,5 +63,21 @@ class AdminCategoryController extends Controller
         $this->categories->delete($category);
 
         return response()->json(['message' => 'Catégorie supprimée.']);
+    }
+
+    /** « Électronique » et « Electronique » donnent le même slug : refus explicite plutôt qu'une erreur SQL. */
+    private function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($name);
+
+        $taken = Category::where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists();
+
+        if ($taken) {
+            throw ValidationException::withMessages(['name' => ['Une catégorie avec ce nom existe déjà.']]);
+        }
+
+        return $slug;
     }
 }

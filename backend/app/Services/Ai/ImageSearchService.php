@@ -17,22 +17,28 @@ class ImageSearchService
      */
     public function search(UploadedFile $image): array
     {
+        $unavailable = [
+            'product_id' => null,
+            'match_count' => 0,
+            'confidence' => 0.0,
+            'products' => collect(),
+            'source' => 'unavailable',
+        ];
+
         if (! $this->vision->isAvailable()) {
-            return [
-                'product_id' => null,
-                'match_count' => 0,
-                'confidence' => 0.0,
-                'products' => collect(),
-                'source' => 'unavailable',
-            ];
+            return $unavailable;
         }
 
-        $result = $this->vision->search($image);
+        try {
+            $result = $this->vision->search($image);
+        } catch (\Throwable) {
+            return $unavailable;
+        }
         $productId = $result['product_id'] ?? null;
         $confidence = (float) ($result['confidence'] ?? 0);
 
-        // Double contrôle côté API : rejeter les matchs trop faibles
-        if (! $productId || $confidence < 0.70) {
+        // Le seuil de similarité est appliqué par le service CV (CV_MIN_SIMILARITY)
+        if (! $productId) {
             return [
                 'product_id' => null,
                 'match_count' => (int) ($result['match_count'] ?? 0),

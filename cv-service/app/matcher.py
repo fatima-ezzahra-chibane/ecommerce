@@ -9,6 +9,7 @@ Pas de PyTorch (trop lourd) : ONNX Runtime + MobileNetV2 ImageNet.
 from __future__ import annotations
 
 import io
+import os
 import pickle
 import urllib.request
 from dataclasses import dataclass
@@ -20,22 +21,22 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
-MIN_SIMILARITY = float(__import__("os").environ.get("CV_MIN_SIMILARITY", "0.72"))
-MIN_SIMILARITY_GAP = float(__import__("os").environ.get("CV_MIN_SIMILARITY_GAP", "0.035"))
-MAX_IMAGE_DIM = int(__import__("os").environ.get("CV_MAX_IMAGE_DIM", "1024"))
+MIN_SIMILARITY = float(os.environ.get("CV_MIN_SIMILARITY", "0.72"))
+MIN_SIMILARITY_GAP = float(os.environ.get("CV_MIN_SIMILARITY_GAP", "0.035"))
+MAX_IMAGE_DIM = int(os.environ.get("CV_MAX_IMAGE_DIM", "1024"))
 
-# MobileNetV2 ONNX (ImageNet) — couche pooling → vecteur 1280-d
-MODEL_URL = __import__("os").environ.get(
+# MobileNetV2 ONNX (ImageNet) — sortie 1000-d utilisée comme embedding
+MODEL_URL = os.environ.get(
     "CV_ONNX_URL",
-    "https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx",
+    "https://media.githubusercontent.com/media/onnx/models/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx",
 )
-MODEL_PATH = Path(__import__("os").environ.get("CV_ONNX_PATH", "/app/models/mobilenetv2-12.onnx"))
+MODEL_PATH = Path(os.environ.get("CV_ONNX_PATH", "/app/models/mobilenetv2-12.onnx"))
 
 
 def _ensure_model(path: Path) -> Path:
     if path.exists() and path.stat().st_size > 1_000_000:
         return path
-    # Si le fichier monté n'existe pas, tenter un téléchargement (dev)
+    # Modèle normalement embarqué par le Dockerfile ; sinon téléchargement
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".download")
     try:
@@ -43,7 +44,8 @@ def _ensure_model(path: Path) -> Path:
         tmp.replace(path)
     except Exception as exc:
         raise RuntimeError(
-            f"Modèle ONNX introuvable ({path}). Placez mobilenetv2-12.onnx dans cv-service/models/. ({exc})"
+            f"Modèle ONNX introuvable ({path}) et téléchargement impossible depuis {MODEL_URL}. "
+            f"Reconstruisez l'image : docker compose build cv-service. ({exc})"
         ) from exc
     return path
 
@@ -55,7 +57,7 @@ class ProductFeatures:
 
 
 class EmbeddingEncoder:
-    """MobileNetV2 ONNX → embedding (sortie avant softmax / global pool)."""
+    """MobileNetV2 ONNX → embedding 1000-d (logits ImageNet, normalisés L2)."""
 
     def __init__(self, model_path: Path = MODEL_PATH) -> None:
         path = _ensure_model(model_path)
@@ -83,7 +85,7 @@ class EmbeddingEncoder:
             arr = (arr - mean) / std
             return np.transpose(arr, (2, 0, 1))[None, ...]  # 1x3x224x224
 
-        # Center crop 80%
+        # Center crop 85 %
         w, h = img.size
         side = int(min(w, h) * 0.85)
         left = (w - side) // 2
@@ -95,7 +97,7 @@ class EmbeddingEncoder:
     def _run(self, batch: np.ndarray) -> np.ndarray:
         out = self.session.run([self.output_name], {self.input_name: batch})[0]
         vec = out.reshape(-1).astype(np.float32)
-        # Softmax logits → L2 normalize for cosine
+        # Normalisation L2 → produit scalaire = similarité cosinus
         vec = vec / (np.linalg.norm(vec) + 1e-8)
         return vec
 
@@ -154,10 +156,13 @@ class ProductMatcher:
         return True
 
     async def index_from_url(self, product_id: int, image_url: str) -> bool:
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            response = await client.get(image_url)
-            response.raise_for_status()
-            return self.index_from_bytes(product_id, response.content)
+        try:
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+        except httpx.HTTPError:
+            return False
+        return self.index_from_bytes(product_id, response.content)
 
     def search(self, data: bytes) -> dict[str, Any]:
         query = self.encoder.encode(data)

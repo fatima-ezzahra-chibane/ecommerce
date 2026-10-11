@@ -25,8 +25,7 @@ class IndexProductVisualsCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->option('fresh')) {
-            \Illuminate\Support\Facades\Http::timeout(10)->delete(rtrim(config('services.cv.url'), '/').'/index');
+        if ($this->option('fresh') && $vision->clearIndex()) {
             $this->info('Index CV réinitialisé.');
         }
 
