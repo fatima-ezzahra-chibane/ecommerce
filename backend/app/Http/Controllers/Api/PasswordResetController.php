@@ -65,6 +65,7 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->firstOrFail();
         $user->update(['password' => $request->password]);
+        $user->tokens()->delete();
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json(['message' => 'Mot de passe mis à jour. Vous pouvez vous connecter.']);

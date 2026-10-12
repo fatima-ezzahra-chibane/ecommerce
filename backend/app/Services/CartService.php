@@ -6,7 +6,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class CartService
 {
@@ -30,6 +30,7 @@ class CartService
         $cart = $this->getOrCreateCart($user);
 
         $item = CartItem::where('cart_id', $cart->id)->where('product_id', $productId)->first();
+        $this->ensureInStock($product, ($item?->quantity ?? 0) + $quantity);
 
         if ($item) {
             $item->update(['quantity' => $item->quantity + $quantity]);
@@ -52,6 +53,7 @@ class CartService
         if ($quantity <= 0) {
             $item->delete();
         } else {
+            $this->ensureInStock($item->product, $quantity);
             $item->update(['quantity' => $quantity]);
         }
 
@@ -64,6 +66,15 @@ class CartService
         CartItem::where('cart_id', $cart->id)->where('id', $itemId)->delete();
 
         return $this->getCart($user);
+    }
+
+    private function ensureInStock(Product $product, int $quantity): void
+    {
+        if ($quantity > $product->stock) {
+            throw ValidationException::withMessages([
+                'quantity' => ["Stock insuffisant : {$product->stock} disponible(s) pour {$product->name}."],
+            ]);
+        }
     }
 
     public function clear(User $user): void

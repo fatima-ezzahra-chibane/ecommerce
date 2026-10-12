@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use App\Models\Product;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -46,17 +47,35 @@ class VisionSearchClient
         return ['indexed_products' => 0, 'status' => 'unavailable'];
     }
 
-    public function indexFromUrl(int $productId, string $imageUrl): bool
+    /** Seuls les produits actifs avec image sont indexés ; les autres sont retirés de l'index. */
+    public function syncProduct(Product $product): bool
     {
+        $imageUrl = $this->internalImageUrl($product->image);
+
+        if ($product->status !== 'active' || ! $imageUrl) {
+            return $this->removeProduct($product->id);
+        }
+
         try {
             $response = Http::timeout(60)->post($this->baseUrl().'/index/url', [
-                'product_id' => $productId,
+                'product_id' => $product->id,
                 'image_url' => $imageUrl,
             ]);
 
             return $response->successful();
         } catch (\Throwable $e) {
-            Log::warning('CV index failed', ['product_id' => $productId, 'message' => $e->getMessage()]);
+            Log::warning('CV index failed', ['product_id' => $product->id, 'message' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    public function removeProduct(int $productId): bool
+    {
+        try {
+            return Http::timeout(10)->delete($this->baseUrl().'/index/'.$productId)->successful();
+        } catch (\Throwable $e) {
+            Log::warning('CV index removal failed', ['product_id' => $productId, 'message' => $e->getMessage()]);
 
             return false;
         }
@@ -92,5 +111,19 @@ class VisionSearchClient
     private function baseUrl(): string
     {
         return rtrim(config('services.cv.url', 'http://cv-service:8090'), '/');
+    }
+
+    /** URL joignable depuis le conteneur CV : les images locales passent par nginx. */
+    private function internalImageUrl(?string $image): ?string
+    {
+        if (! $image) {
+            return null;
+        }
+
+        if (str_starts_with($image, 'http')) {
+            return str_replace(['http://localhost:8080', 'http://127.0.0.1:8080'], 'http://nginx', $image);
+        }
+
+        return 'http://nginx'.(str_starts_with($image, '/') ? $image : '/'.$image);
     }
 }

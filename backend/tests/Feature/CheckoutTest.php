@@ -181,12 +181,13 @@ class CheckoutTest extends TestCase
         ]);
     }
 
-    public function test_checkout_fails_when_stock_insufficient(): void
+    public function test_checkout_fails_when_stock_dropped_after_adding_to_cart(): void
     {
         $this->actingAsUser();
-        $product = Product::factory()->create(['price' => 50, 'stock' => 1]);
+        $product = Product::factory()->create(['price' => 50, 'stock' => 3]);
 
-        $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 3]);
+        $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 3])->assertOk();
+        $product->update(['stock' => 1]);
 
         $response = $this->api('POST', '/orders', [
             'shipping_address' => 'Adresse test',
@@ -195,5 +196,7 @@ class CheckoutTest extends TestCase
 
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['stock']);
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(1, $product->fresh()->stock);
     }
 }

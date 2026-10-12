@@ -24,6 +24,7 @@ Le modèle `mobilenetv2-12.onnx` est **téléchargé et embarqué dans l’image
 | `GET` | `/health` | État + nombre de produits indexés |
 | `POST` | `/index/url` | Indexer l'image d'un produit (`product_id`, `image_url`) |
 | `POST` | `/search` | Rechercher un produit à partir d'une photo (`file`) |
+| `DELETE` | `/index/{product_id}` | Retirer un produit (désactivé ou supprimé) |
 | `DELETE` | `/index` | Vider l'index |
 
 ## Tests

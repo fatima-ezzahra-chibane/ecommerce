@@ -215,6 +215,12 @@ class ProductMatcher:
             "min_similarity_gap": MIN_SIMILARITY_GAP,
         }
 
+    def remove(self, product_id: int) -> bool:
+        if self.index.pop(product_id, None) is None:
+            return False
+        self._save()
+        return True
+
     def clear(self) -> None:
         self.index = {}
         if self.index_path.exists():

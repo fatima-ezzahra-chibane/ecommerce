@@ -31,7 +31,7 @@ class ProfileController extends Controller
             return response()->json(['message' => 'Mot de passe actuel incorrect.'], 422);
         }
 
-        $user->update(['password' => Hash::make($validated['password'])]);
+        $user->update(['password' => $validated['password']]);
 
         return response()->json(['message' => 'Mot de passe modifié.']);
     }

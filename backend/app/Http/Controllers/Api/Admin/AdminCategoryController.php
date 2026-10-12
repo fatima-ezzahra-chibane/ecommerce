@@ -7,14 +7,19 @@ use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Models\Category;
 use App\Models\OrderItem;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Services\Ai\VisionSearchClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AdminCategoryController extends Controller
 {
-    public function __construct(private CategoryRepositoryInterface $categories) {}
+    public function __construct(
+        private CategoryRepositoryInterface $categories,
+        private VisionSearchClient $vision,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -58,6 +63,14 @@ class AdminCategoryController extends Controller
             return response()->json([
                 'message' => 'Impossible de supprimer cette catégorie : elle contient des produits déjà commandés. Désactivez ces produits à la place.',
             ], 422);
+        }
+
+        // Les produits (jamais commandés) partent en cascade : nettoyer leurs images et l'index CV
+        foreach ($category->products as $product) {
+            if ($product->image && str_contains($product->image, '/storage/products/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $product->image));
+            }
+            $this->vision->removeProduct($product->id);
         }
 
         $this->categories->delete($category);

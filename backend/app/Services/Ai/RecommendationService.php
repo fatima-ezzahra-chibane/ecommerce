@@ -44,14 +44,7 @@ class RecommendationService
     public function forUser(?User $user, int $limit = 8): Collection
     {
         if (! $user) {
-            return Product::query()
-                ->active()
-                ->with(['category'])
-                ->withAvg('reviews', 'rating')
-                ->orderByDesc('reviews_avg_rating')
-                ->orderByDesc('created_at')
-                ->limit($limit)
-                ->get();
+            return $this->topRated($limit);
         }
 
         $categoryIds = OrderItem::query()
@@ -73,12 +66,7 @@ class RecommendationService
         $categoryIds = $categoryIds->merge($wishlistCategories)->unique()->values();
 
         if ($categoryIds->isEmpty()) {
-            return Product::query()
-                ->active()
-                ->with(['category'])
-                ->latest()
-                ->limit($limit)
-                ->get();
+            return $this->topRated($limit);
         }
 
         return Product::query()
@@ -87,7 +75,19 @@ class RecommendationService
             ->with(['category'])
             ->withAvg('reviews', 'rating')
             ->orderByDesc('reviews_avg_rating')
-            ->inRandomOrder()
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function topRated(int $limit): Collection
+    {
+        return Product::query()
+            ->active()
+            ->with(['category'])
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_avg_rating')
+            ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
     }

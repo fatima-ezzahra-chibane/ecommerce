@@ -40,17 +40,16 @@ class ReviewController extends Controller
             ->where('product_id', $productId)
             ->first();
 
-        if ($existing?->image && str_contains($existing->image, '/storage/reviews/')) {
-            $old = str_replace('/storage/', '', $existing->image);
-            Storage::disk('public')->delete($old);
-        }
-
         $data = [
             'rating' => $validated['rating'],
             'comment' => $validated['comment'] ?? null,
         ];
 
+        // Sans nouvelle image, l'ancienne est conservée
         if ($request->hasFile('image')) {
+            if ($existing?->image && str_contains($existing->image, '/storage/reviews/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $existing->image));
+            }
             $path = $request->file('image')->store('reviews', 'public');
             $data['image'] = '/storage/'.$path;
         }

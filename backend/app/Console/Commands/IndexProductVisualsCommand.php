@@ -29,18 +29,12 @@ class IndexProductVisualsCommand extends Command
             $this->info('Index CV réinitialisé.');
         }
 
-        $products = Product::query()->where('status', 'active')->whereNotNull('image')->get();
+        $products = Product::query()->active()->whereNotNull('image')->get();
         $ok = 0;
         $fail = 0;
 
         foreach ($products as $product) {
-            $url = $this->resolveImageUrl($product->image);
-            if (! $url) {
-                $fail++;
-                continue;
-            }
-
-            if ($vision->indexFromUrl($product->id, $url)) {
+            if ($vision->syncProduct($product)) {
                 $ok++;
                 $this->line("  ✓ #{$product->id} {$product->name}");
             } else {
@@ -53,24 +47,5 @@ class IndexProductVisualsCommand extends Command
         $this->info("Indexation terminée : {$ok} OK, {$fail} échec(s). Index CV : ".($stats['indexed_products'] ?? 0).' produit(s).');
 
         return self::SUCCESS;
-    }
-
-    private function resolveImageUrl(?string $image): ?string
-    {
-        if (! $image) {
-            return null;
-        }
-
-        if (str_starts_with($image, 'http')) {
-            return str_replace(
-                ['http://localhost:8080', 'http://127.0.0.1:8080'],
-                'http://nginx',
-                $image
-            );
-        }
-
-        $path = str_starts_with($image, '/') ? $image : '/'.$image;
-
-        return 'http://nginx'.$path;
     }
 }

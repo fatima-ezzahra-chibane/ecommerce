@@ -36,8 +36,9 @@ class AiController extends Controller
 
     public function recommendations(Request $request): JsonResponse
     {
-        $limit = min((int) $request->get('limit', 8), 20);
-        $products = $this->recommendations->forUser($request->user(), $limit);
+        $limit = min(max((int) $request->get('limit', 8), 1), 20);
+        // Route publique : le token Bearer n'est lu que si on interroge explicitement la garde sanctum
+        $products = $this->recommendations->forUser($request->user('sanctum'), $limit);
 
         return response()->json([
             'data' => ProductResource::collection($products),

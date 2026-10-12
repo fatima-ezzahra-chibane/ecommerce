@@ -52,6 +52,24 @@ class ReviewTest extends TestCase
         Storage::disk('public')->assertExists(str_replace('/storage/', '', $review->image));
     }
 
+    public function test_updating_review_without_new_image_keeps_existing_image(): void
+    {
+        Storage::fake('public');
+        $this->actingAsUser();
+        $product = Product::factory()->create();
+
+        $this->post("/api/v1/products/{$product->id}/reviews", [
+            'rating' => 3,
+            'image' => UploadedFile::fake()->image('avis.jpg'),
+        ], ['Accept' => 'application/json'])->assertCreated();
+        $image = Review::first()->image;
+
+        $this->api('POST', "/products/{$product->id}/reviews", ['rating' => 5])->assertCreated();
+
+        $this->assertSame($image, Review::first()->image);
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', $image));
+    }
+
     public function test_review_rating_must_be_between_1_and_5(): void
     {
         $this->actingAsUser();

@@ -5,11 +5,20 @@ namespace Tests;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 
 abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Les tests ne doivent jamais toucher l'index du vrai service CV
+        Http::preventStrayRequests();
+    }
 
     protected function createUser(string $role = 'user', array $attributes = []): User
     {

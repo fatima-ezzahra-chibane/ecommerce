@@ -43,6 +43,7 @@ class AdminProductController extends Controller
         $validated['status'] = $validated['status'] ?? 'active';
 
         $product = $this->products->create($validated);
+        $this->vision->syncProduct($product);
 
         return response()->json([
             'message' => 'Produit créé.',
@@ -53,7 +54,15 @@ class AdminProductController extends Controller
     public function update(UpdateProductRequest $request, int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
+        $before = $product->only(['status', 'image']);
         $product = $this->products->update($product, $request->validated());
+
+        if ($product->status === 'inactive') {
+            CartItem::where('product_id', $product->id)->delete();
+        }
+        if ($before !== $product->only(['status', 'image'])) {
+            $this->vision->syncProduct($product);
+        }
 
         return response()->json([
             'message' => 'Produit mis à jour.',
@@ -76,11 +85,7 @@ class AdminProductController extends Controller
 
         $path = $request->file('image')->store('products', 'public');
         $product->update(['image' => '/storage/'.$path]);
-        $product->refresh();
-
-        if ($product->status === 'active') {
-            $this->vision->indexFromUrl($product->id, 'http://nginx'.$product->image);
-        }
+        $this->vision->syncProduct($product->refresh());
 
         return response()->json([
             'message' => 'Image téléversée.',
@@ -95,6 +100,7 @@ class AdminProductController extends Controller
         if ($product->orderItems()->exists()) {
             $product->update(['status' => 'inactive']);
             CartItem::where('product_id', $product->id)->delete();
+            $this->vision->removeProduct($product->id);
 
             return response()->json([
                 'message' => 'Produit déjà commandé : désactivé au lieu d\'être supprimé (historique conservé).',
@@ -106,6 +112,7 @@ class AdminProductController extends Controller
             Storage::disk('public')->delete(str_replace('/storage/', '', $product->image));
         }
         $this->products->delete($product);
+        $this->vision->removeProduct($product->id);
 
         return response()->json(['message' => 'Produit supprimé.']);
     }

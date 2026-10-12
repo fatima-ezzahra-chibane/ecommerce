@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -159,6 +161,56 @@ class AdminManagementTest extends TestCase
         Storage::disk('public')->assertMissing('products/photo.jpg');
     }
 
+    public function test_deactivating_product_removes_it_from_carts_and_cv_index(): void
+    {
+        Http::fake(['cv-service:8090/*' => Http::response(['removed' => true], 200)]);
+        $product = Product::factory()->create();
+        $this->actingAsUser();
+        $this->api('POST', '/cart', ['product_id' => $product->id])->assertOk();
+        $this->actingAsUser(role: 'admin');
+
+        $this->api('PUT', "/admin/products/{$product->id}", ['status' => 'inactive'])->assertOk();
+
+        $this->assertSame(0, CartItem::where('product_id', $product->id)->count());
+        Http::assertSent(fn ($request) => $request->method() === 'DELETE'
+            && str_ends_with($request->url(), "/index/{$product->id}"));
+    }
+
+    public function test_reactivating_product_reindexes_it(): void
+    {
+        Http::fake(['cv-service:8090/*' => Http::response(['indexed' => true], 200)]);
+        $product = Product::factory()->create(['status' => 'inactive', 'image' => '/storage/products/a.jpg']);
+
+        $this->api('PUT', "/admin/products/{$product->id}", ['status' => 'active'])->assertOk();
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/index/url')
+            && $request['image_url'] === 'http://nginx/storage/products/a.jpg');
+    }
+
+    public function test_price_update_does_not_call_cv_service(): void
+    {
+        Http::fake();
+        $product = Product::factory()->create();
+
+        $this->api('PUT', "/admin/products/{$product->id}", ['price' => 12])->assertOk();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_deleting_category_cleans_product_images_and_cv_index(): void
+    {
+        Storage::fake('public');
+        Http::fake(['cv-service:8090/*' => Http::response(['removed' => true], 200)]);
+        Storage::disk('public')->put('products/x.jpg', 'img');
+        $product = Product::factory()->create(['image' => '/storage/products/x.jpg']);
+
+        $this->api('DELETE', "/admin/categories/{$product->category_id}")->assertOk();
+
+        $this->assertDatabaseMissing('products', ['id' => $product->id]);
+        Storage::disk('public')->assertMissing('products/x.jpg');
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), "/index/{$product->id}"));
+    }
+
     public function test_category_name_is_required(): void
     {
         $this->api('POST', '/admin/categories', [])
@@ -213,6 +265,17 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('data.is_active', true);
     }
 
+    public function test_admin_accounts_cannot_be_deactivated(): void
+    {
+        $otherAdmin = $this->createUser(role: 'admin');
+
+        $this->api('PATCH', "/admin/users/{$otherAdmin->id}/toggle")
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Un compte administrateur ne peut pas être désactivé.');
+
+        $this->assertTrue($otherAdmin->fresh()->is_active);
+    }
+
     // ---- Coupons ----
 
     public function test_deleting_coupon_keeps_order_history(): void
@@ -235,18 +298,25 @@ class AdminManagementTest extends TestCase
 
     // ---- Tableau de bord ----
 
-    public function test_dashboard_revenue_ignores_pending_and_cancelled_orders(): void
+    public function test_dashboard_revenue_counts_only_collected_payments(): void
     {
         $userId = $this->createUser()->id;
-        foreach (['pending' => 10, 'processing' => 100, 'shipped' => 200, 'delivered' => 300, 'cancelled' => 1000] as $status => $total) {
-            Order::create(['user_id' => $userId, 'total_price' => $total, 'status' => $status, 'shipping_address' => 'A']);
+        foreach ([
+            ['pending', 'completed', 100],   // carte encaissée, commande pas encore traitée
+            ['shipped', 'pending', 10],      // espèces pas encore encaissées
+            ['delivered', 'completed', 500], // espèces encaissées à la livraison
+            ['cancelled', 'refunded', 1000],
+            ['cancelled', 'failed', 20],
+        ] as [$status, $paymentStatus, $total]) {
+            $order = Order::create(['user_id' => $userId, 'total_price' => $total, 'status' => $status, 'shipping_address' => 'A']);
+            Payment::create(['order_id' => $order->id, 'payment_method' => 'card', 'amount' => $total, 'status' => $paymentStatus]);
         }
 
         $this->api('GET', '/admin/dashboard')
             ->assertOk()
             ->assertJsonPath('data.orders_count', 5)
             ->assertJsonPath('data.users_count', 1)
-            ->assertJsonPath('data.orders_by_status.cancelled', 1);
+            ->assertJsonPath('data.orders_by_status.cancelled', 2);
 
         $data = $this->api('GET', '/admin/dashboard')->json('data');
         $this->assertEquals(600, (float) $data['revenue']);

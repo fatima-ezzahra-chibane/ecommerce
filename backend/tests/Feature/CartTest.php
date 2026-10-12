@@ -84,4 +84,45 @@ class CartTest extends TestCase
 
         $this->assertDatabaseMissing('cart_items', ['id' => $itemId]);
     }
+
+    public function test_inactive_product_cannot_be_added_to_cart(): void
+    {
+        $this->actingAsUser();
+        $product = Product::factory()->create(['status' => 'inactive']);
+
+        $this->api('POST', '/cart', ['product_id' => $product->id])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.product_id.0', 'Ce produit n\'est pas disponible.');
+    }
+
+    public function test_cart_quantity_cannot_exceed_stock(): void
+    {
+        $this->actingAsUser();
+        $product = Product::factory()->create(['stock' => 3]);
+
+        $itemId = $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 2])
+            ->assertOk()->json('data.items.0.id');
+
+        $this->api('POST', '/cart', ['product_id' => $product->id, 'quantity' => 2])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['quantity']);
+
+        $this->api('PUT', "/cart/{$itemId}", ['quantity' => 4])->assertUnprocessable();
+        $this->api('PUT', "/cart/{$itemId}", ['quantity' => 3])->assertOk();
+
+        $this->assertDatabaseHas('cart_items', ['id' => $itemId, 'quantity' => 3]);
+    }
+
+    public function test_user_cannot_modify_someone_else_cart_item(): void
+    {
+        $this->actingAsUser();
+        $product = Product::factory()->create();
+        $itemId = $this->api('POST', '/cart', ['product_id' => $product->id])->json('data.items.0.id');
+
+        $this->actingAsUser();
+        $this->api('PUT', "/cart/{$itemId}", ['quantity' => 5])->assertNotFound();
+        $this->api('DELETE', "/cart/{$itemId}")->assertOk();
+
+        $this->assertDatabaseHas('cart_items', ['id' => $itemId, 'quantity' => 1]);
+    }
 }

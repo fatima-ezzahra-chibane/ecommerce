@@ -26,6 +26,11 @@ class AdminUserController extends Controller
     public function toggleActive(int $id): JsonResponse
     {
         $user = User::findOrFail($id);
+
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Un compte administrateur ne peut pas être désactivé.'], 422);
+        }
+
         $user->update(['is_active' => ! $user->is_active]);
 
         if (! $user->is_active) {

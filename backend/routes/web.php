@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => response()->json([
-    'name' => 'E-Commerce API',
+    'name' => 'Vivid API',
     'version' => '1.0',
-    'docs' => '/api/v1',
+    'api' => '/api/v1/products',
+    'health' => '/up',
 ]));

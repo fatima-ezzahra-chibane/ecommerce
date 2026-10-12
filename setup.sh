@@ -22,11 +22,13 @@ echo "MySQL prêt."
 if [ ! -f backend/vendor/autoload.php ]; then
   echo "==> Composer..."
   "${DC[@]}" exec backend rm -rf vendor 2>/dev/null || true
-  "${DC[@]}" exec -e COMPOSER_PROCESS_TIMEOUT=0 backend composer install --no-interaction --prefer-dist --no-dev
+  "${DC[@]}" exec -e COMPOSER_PROCESS_TIMEOUT=0 backend composer install --no-interaction --prefer-dist
 fi
 
 echo "==> Migrations + seed..."
-"${DC[@]}" exec backend php artisan key:generate --force 2>/dev/null || true
+if ! grep -q '^APP_KEY=base64:' backend/.env; then
+  "${DC[@]}" exec backend php artisan key:generate --force
+fi
 "${DC[@]}" exec backend php artisan migrate --force --seed
 "${DC[@]}" exec backend php artisan storage:link 2>/dev/null || true
 "${DC[@]}" exec backend chown -R www-data:www-data storage bootstrap/cache

@@ -27,9 +27,4 @@ class ProductFactory extends Factory
             'status' => 'active',
         ];
     }
-
-    public function inactive(): static
-    {
-        return $this->state(fn () => ['status' => 'inactive']);
-    }
 }

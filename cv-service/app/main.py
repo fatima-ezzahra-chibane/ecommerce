@@ -43,3 +43,8 @@ async def search(file: UploadFile = File(...)):
 def clear_index():
     matcher.clear()
     return {"cleared": True}
+
+
+@app.delete("/index/{product_id}")
+def remove_product(product_id: int):
+    return {"product_id": product_id, "removed": matcher.remove(product_id)}

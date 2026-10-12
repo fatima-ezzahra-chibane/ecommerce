@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Wishlist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -39,16 +40,29 @@ class AiTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function test_personalized_recommendations_for_user(): void
+    public function test_personalized_recommendations_use_bearer_token_on_public_route(): void
     {
         $user = User::factory()->create();
-        Product::factory()->count(3)->create(['status' => 'active']);
+        $favorite = Product::factory()->create();
+        $sameCategory = Product::factory()->create(['category_id' => $favorite->category_id]);
+        Product::factory()->count(3)->create();
+        Wishlist::create(['user_id' => $user->id, 'product_id' => $favorite->id]);
+        $token = $user->createToken('auth-token')->plainTextToken;
 
-        $response = $this->actingAs($user, 'sanctum')
-            ->getJson('/api/v1/ai/recommendations');
+        $personal = $this->getJson('/api/v1/ai/recommendations', ['Authorization' => "Bearer {$token}"])
+            ->assertOk()->json('data.*.id');
+        sort($personal);
+        $this->assertSame([$favorite->id, $sameCategory->id], $personal);
 
-        $response->assertOk()
-            ->assertJsonStructure(['data']);
+        $this->app['auth']->forgetGuards();
+        $this->assertCount(5, $this->getJson('/api/v1/ai/recommendations')->assertOk()->json('data'));
+    }
+
+    public function test_recommendation_limit_is_clamped(): void
+    {
+        Product::factory()->count(3)->create();
+
+        $this->getJson('/api/v1/ai/recommendations?limit=-5')->assertOk()->assertJsonCount(1, 'data');
     }
 
     public function test_image_search_requires_image(): void

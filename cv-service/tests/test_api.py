@@ -125,6 +125,15 @@ class CvServiceTest(unittest.TestCase):
         self.assertEqual(self.client.delete("/index").json(), {"cleared": True})
         self.assertEqual(self.client.get("/health").json()["indexed_products"], 0)
 
+    def test_remove_single_product_from_index(self):
+        self._index(1, "/circle.png")
+        self._index(2, "/stripes.png")
+
+        self.assertEqual(self.client.delete("/index/1").json(), {"product_id": 1, "removed": True})
+        self.assertEqual(self.client.delete("/index/1").json()["removed"], False)
+        self.assertEqual(self.client.get("/health").json()["indexed_products"], 1)
+        self.assertNotEqual(self._search(RED_CIRCLE).json()["product_id"], 1)
+
     def test_index_persists_across_matcher_reload(self):
         self._index(1, "/circle.png")
         from app.matcher import ProductMatcher

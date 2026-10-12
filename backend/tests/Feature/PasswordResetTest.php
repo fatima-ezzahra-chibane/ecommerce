@@ -44,6 +44,7 @@ class PasswordResetTest extends TestCase
     public function test_user_can_reset_password_with_valid_token(): void
     {
         $user = $this->createUser();
+        $user->createToken('ancienne-session');
         $this->storeToken($user->email, 'jeton-valide');
 
         $this->api('POST', '/reset-password', [
@@ -55,6 +56,7 @@ class PasswordResetTest extends TestCase
 
         $this->assertTrue(Hash::check('nouveauMDP1', $user->fresh()->password));
         $this->assertDatabaseCount('password_reset_tokens', 0);
+        $this->assertSame(0, $user->tokens()->count(), 'Les sessions existantes doivent être révoquées.');
     }
 
     public function test_reset_fails_with_wrong_token(): void

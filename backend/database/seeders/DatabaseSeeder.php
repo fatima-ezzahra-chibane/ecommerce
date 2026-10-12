@@ -14,6 +14,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Relancer setup.sh ne doit ni dupliquer ni écraser les données existantes
+        if (User::where('email', 'admin@shop.com')->exists()) {
+            $this->command?->info('Données de démo déjà présentes : seed ignoré.');
+
+            return;
+        }
+
         User::forceCreate([
             'name' => 'Admin',
             'email' => 'admin@shop.com',
