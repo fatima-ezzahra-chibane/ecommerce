@@ -47,7 +47,8 @@ echo "==> Indexation images produits (MobileNetV2 ONNX)..."
 "${DC[@]}" exec backend php artisan products:index-visuals --fresh 2>/dev/null || echo "Index CV ignoré (service non prêt)."
 
 OWNER="${SUDO_USER:-$(whoami)}"
-chown -R "${OWNER}:${OWNER}" backend/vendor backend/.env backend/storage 2>/dev/null || true
+# storage/ reste à www-data (écriture des logs, du cache et des uploads par PHP-FPM)
+chown -R "${OWNER}:${OWNER}" backend/vendor backend/.env 2>/dev/null || true
 
 echo ""
 echo "=== E-Commerce Platform ==="

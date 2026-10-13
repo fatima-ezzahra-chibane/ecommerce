@@ -17,7 +17,7 @@ vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: mockUser }) 
 vi.mock('../contexts/ToastContext', () => ({ useToast: () => ({ showToast: mockShowToast }) }));
 vi.mock('../services', () => ({
   productService: { get: vi.fn(), list: vi.fn() },
-  reviewService: { list: vi.fn(), create: vi.fn(() => Promise.resolve()) },
+  reviewService: { list: vi.fn(), create: vi.fn(() => Promise.resolve()), remove: vi.fn(() => Promise.resolve()) },
   aiService: { productRecommendations: vi.fn(), searchImage: vi.fn() },
   categoryService: { list: vi.fn() },
   wishlistService: { add: vi.fn(() => Promise.resolve()) },
@@ -39,8 +39,8 @@ beforeEach(() => {
   mockUser = null;
   productService.get.mockResolvedValue({ data: { data: product } });
   reviewService.list.mockResolvedValue({ data: { data: [
-    { id: 1, rating: 5, comment: 'Superbe', user: { name: 'Sara' }, image: null },
-  ] } });
+    { id: 1, rating: 5, comment: 'Superbe', user: { id: 2, name: 'Sara' }, image: null },
+  ], meta: { total: 1 } } });
   aiService.productRecommendations.mockResolvedValue({ data: { data: [
     { id: 6, name: 'Sac Plage', price: 120, image: null },
   ] } });
@@ -97,6 +97,45 @@ describe('ProductDetailPage', () => {
       rating: 4, comment: 'Très bien', imageFile: null,
     }));
     await waitFor(() => expect(reviewService.list).toHaveBeenCalledTimes(2));
+  });
+
+  it('affiche le total des avis paginés', async () => {
+    reviewService.list.mockResolvedValue({ data: {
+      data: [{ id: 1, rating: 5, comment: 'Superbe', user: { id: 2, name: 'Sara' }, image: null }],
+      meta: { total: 14 },
+    } });
+    renderDetail();
+    expect(await screen.findByText('Avis clients (14)')).toBeInTheDocument();
+  });
+
+  it('supprime uniquement son propre avis', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockUser = { id: 1 };
+    reviewService.list.mockResolvedValue({ data: { data: [
+      { id: 1, rating: 5, comment: 'Superbe', user: { id: 2, name: 'Sara' }, image: null },
+      { id: 2, rating: 3, comment: 'Moyen', user: { id: 1, name: 'Moi' }, image: null },
+    ], meta: { total: 2 } } });
+    const user = userEvent.setup();
+    renderDetail();
+
+    const buttons = await screen.findAllByRole('button', { name: /supprimer mon avis/i });
+    expect(buttons).toHaveLength(1);
+    await user.click(buttons[0]);
+    await waitFor(() => expect(reviewService.remove).toHaveBeenCalledWith('5'));
+  });
+
+  it('désactive l’ajout au panier en rupture de stock', async () => {
+    productService.get.mockResolvedValue({ data: { data: { ...product, stock: 0 } } });
+    renderDetail();
+    await screen.findByRole('heading', { name: 'Robe Été' });
+    expect(screen.getByText('Rupture de stock')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^ajouter au panier$/i })[0]).toBeDisabled();
+  });
+
+  it('affiche « Produit introuvable » si le produit n’existe pas', async () => {
+    productService.get.mockRejectedValue({ response: { status: 404 } });
+    renderDetail();
+    expect(await screen.findByText('Produit introuvable')).toBeInTheDocument();
   });
 });
 
@@ -194,5 +233,7 @@ describe('OrderCard', () => {
     expect(screen.getByText('Expédiée')).toBeInTheDocument();
     expect(screen.getByText(/WELCOME10/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ouvrir en pleine page/i })).toHaveAttribute('href', '/orders/1');
+    expect(screen.getByText(/carte bancaire/i)).toBeInTheDocument();
+    expect(screen.getByText(/payé/i)).toBeInTheDocument();
   });
 });

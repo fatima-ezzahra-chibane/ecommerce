@@ -6,7 +6,8 @@ import { formatPrice } from '../utils/formatPrice';
 
 const PINK = '#FF4D94';
 
-export default function ProductCard({ product, onAddCart, onAddWishlist }) {
+export default function ProductCard({ product, onAddCart, onAddWishlist, inWishlist = false }) {
+  const outOfStock = Number(product.stock) <= 0;
   const rating = product.average_rating ? Number(product.average_rating) : null;
   const promo = getPromo(product);
   const price = Number(product.price);
@@ -47,9 +48,9 @@ export default function ProductCard({ product, onAddCart, onAddWishlist }) {
           className="absolute top-3 right-3 z-20 flex items-center justify-center
             w-10 h-10 bg-white rounded-full text-gray-600 hover:text-[#FF4D94]
             shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-colors duration-300"
-          aria-label="Ajouter aux favoris"
+          aria-label={inWishlist ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         >
-          <MaterialIcon name="favorite" size={22} />
+          <MaterialIcon name="favorite" size={22} filled={inWishlist} className={inWishlist ? '!text-[#FF4D94]' : ''} />
         </button>
       </div>
 
@@ -75,15 +76,18 @@ export default function ProductCard({ product, onAddCart, onAddWishlist }) {
           {promo && (
             <p className="text-sm text-gray-400 line-through mt-0.5">{formatPrice(promo.original)}</p>
           )}
+          {outOfStock && <p className="text-xs font-semibold text-red-500 mt-1">Rupture de stock</p>}
         </div>
 
         <button
           type="button"
           onClick={() => onAddCart?.(product.id)}
+          disabled={outOfStock}
           className="absolute bottom-4 right-4 z-20 flex items-center justify-center
             w-12 h-12 rounded-full text-white
             shadow-lg shadow-[#FF4D94]/40
-            hover:scale-105 active:scale-95 transition-all duration-300"
+            hover:scale-105 active:scale-95 transition-all duration-300
+            disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
           style={{ backgroundColor: PINK }}
           aria-label="Ajouter au panier"
         >

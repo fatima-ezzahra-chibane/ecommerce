@@ -7,10 +7,20 @@ import OrderCard from '../components/OrderCard';
 export default function OrderDetailPage() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    orderService.get(id).then(({ data }) => setOrder(data.data));
+    orderService.get(id).then(({ data }) => setOrder(data.data)).catch(() => setNotFound(true));
   }, [id]);
+
+  if (notFound) {
+    return (
+      <div className="card-vivid max-w-lg mx-auto p-10 text-center">
+        <h1 className="text-xl font-bold">Commande introuvable</h1>
+        <Link to="/orders" className="btn-vivid inline-block mt-6">← Mes commandes</Link>
+      </div>
+    );
+  }
 
   if (!order) {
     return <div className="text-center py-20 text-gray-400">Chargement...</div>;

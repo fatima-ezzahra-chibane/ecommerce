@@ -8,6 +8,18 @@ const api = axios.create({
   timeout: 15000,
 });
 
+let authExpiredHandler = null;
+
+export function setAuthExpiredHandler(fn) {
+  authExpiredHandler = fn;
+}
+
+/** Token expiré ou révoqué (désactivation, nouveau mot de passe) : fin de session côté app. */
+export async function notifyAuthExpired() {
+  await AsyncStorage.removeItem('token');
+  authExpiredHandler?.();
+}
+
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
   if (token) {
@@ -21,5 +33,15 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
+      await notifyAuthExpired();
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

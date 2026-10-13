@@ -79,7 +79,8 @@ services:
     build: ./cv-service
     container_name: ecommerce-cv
     ports:
-      - "8090:8090"
+      # /index (POST/DELETE) n'a pas d'authentification : accessible uniquement depuis la machine hôte.
+      - "127.0.0.1:8090:8090"
     environment:
       CV_MIN_SIMILARITY: 0.72
       CV_MIN_SIMILARITY_GAP: 0.035

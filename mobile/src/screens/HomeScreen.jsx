@@ -21,8 +21,11 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     productService.list({ per_page: 4, sort: 'latest' })
       .then(({ data }) => setFeatured(data.data || []))
+      .catch(() => setFeatured([]))
       .finally(() => setLoading(false));
-    aiService.recommendations({ limit: 4 }).then(({ data }) => setForYou(data.data || []));
+    aiService.recommendations({ limit: 4 })
+      .then(({ data }) => setForYou(data.data || []))
+      .catch(() => setForYou([]));
   }, [user]);
 
   const handleAddCart = async (productId) => {
@@ -33,8 +36,8 @@ export default function HomeScreen({ navigation }) {
     try {
       await addToCart(productId);
       Alert.alert('Panier', 'Produit ajouté au panier');
-    } catch {
-      Alert.alert('Erreur', 'Ajout impossible');
+    } catch (err) {
+      Alert.alert('Erreur', err.response?.data?.errors?.quantity?.[0] || err.response?.data?.message || 'Ajout impossible');
     }
   };
 
@@ -45,8 +48,8 @@ export default function HomeScreen({ navigation }) {
     }
     try {
       await toggle(productId);
-    } catch {
-      Alert.alert('Erreur', 'Favoris impossible');
+    } catch (err) {
+      Alert.alert('Erreur', err.response?.data?.message || 'Favoris impossible');
     }
   };
 
@@ -102,8 +105,10 @@ export default function HomeScreen({ navigation }) {
 
       {forYou.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>{user ? 'Recommandé pour vous' : 'Populaires'}</Text>
-          <Text style={styles.sectionSub}>Suggestions intelligentes</Text>
+          <Text style={styles.sectionTitle}>{user ? 'Recommandé pour vous' : 'Les mieux notés'}</Text>
+          <Text style={styles.sectionSub}>
+            {user ? 'Selon vos favoris et vos commandes' : 'Les produits préférés de nos clients'}
+          </Text>
           <View style={styles.grid}>
             {forYou.map((product) => (
               <View key={product.id} style={styles.gridItem}>

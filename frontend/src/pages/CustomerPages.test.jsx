@@ -8,6 +8,7 @@ const mockRefresh = vi.fn();
 const mockAddToCart = vi.fn();
 const mockRegister = vi.fn();
 const mockRefreshUser = vi.fn();
+const mockLogout = vi.fn(() => Promise.resolve());
 const mockShowToast = vi.fn();
 let mockCart = null;
 let mockUser = null;
@@ -20,7 +21,7 @@ vi.mock('../contexts/CartContext', () => ({
   useCart: () => ({ cart: mockCart, refresh: mockRefresh, addToCart: mockAddToCart }),
 }));
 vi.mock('../contexts/AuthContext', () => ({
-  useAuth: () => ({ user: mockUser, register: mockRegister, refreshUser: mockRefreshUser }),
+  useAuth: () => ({ user: mockUser, register: mockRegister, refreshUser: mockRefreshUser, logout: mockLogout }),
 }));
 vi.mock('../contexts/ToastContext', () => ({
   useToast: () => ({ showToast: mockShowToast }),
@@ -42,7 +43,9 @@ import ResetPasswordPage from './ResetPasswordPage';
 import ProfilePage from './ProfilePage';
 import WishlistPage from './WishlistPage';
 
-const product = (id, name, price) => ({ id, name, price, image: null, category: { name: 'Mode' } });
+const product = (id, name, price, extra = {}) => ({
+  id, name, price, image: null, status: 'active', stock: 10, category: { name: 'Mode' }, ...extra,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -68,12 +71,39 @@ describe('CartPage', () => {
     expect(screen.getByText('Total : 250.00 DH')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Commander' })).toHaveAttribute('href', '/checkout');
 
-    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '3' } });
+    const robeQty = screen.getByRole('spinbutton', { name: 'Quantité Robe' });
+    fireEvent.change(robeQty, { target: { value: '3' } });
+    expect(cartService.update).not.toHaveBeenCalled();
+    fireEvent.blur(robeQty);
     await waitFor(() => expect(cartService.update).toHaveBeenCalledWith(10, 3));
 
-    await user.click(screen.getAllByRole('button', { name: '✕' })[1]);
+    await user.click(screen.getByRole('button', { name: 'Retirer Sac' }));
     expect(cartService.remove).toHaveBeenCalledWith(11);
     await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+  });
+
+  it('ignore une quantité vide ou nulle', () => {
+    mockCart = { items: [{ id: 10, quantity: 2, product: product(1, 'Robe', 100) }] };
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+
+    const qty = screen.getByRole('spinbutton', { name: 'Quantité Robe' });
+    fireEvent.change(qty, { target: { value: '' } });
+    fireEvent.blur(qty);
+    fireEvent.change(qty, { target: { value: '0' } });
+    fireEvent.blur(qty);
+    expect(cartService.update).not.toHaveBeenCalled();
+  });
+
+  it('bloque la commande si un article est indisponible ou en stock insuffisant', () => {
+    mockCart = { items: [
+      { id: 10, quantity: 1, product: product(1, 'Robe', 100, { status: 'inactive' }) },
+      { id: 11, quantity: 5, product: product(2, 'Sac', 50, { stock: 2 }) },
+    ] };
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+
+    expect(screen.getByText(/Produit plus disponible/)).toBeInTheDocument();
+    expect(screen.getByText(/Stock insuffisant : 2 disponible/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Commander' })).not.toBeInTheDocument();
   });
 });
 
@@ -84,7 +114,7 @@ describe('CheckoutPage', () => {
 
     await user.type(screen.getAllByRole('textbox')[0], '12 rue Test');
     await user.selectOptions(screen.getByRole('combobox'), 'cash');
-    await user.type(screen.getByPlaceholderText('WELCOME10'), 'WELCOME10');
+    await user.type(screen.getByPlaceholderText('Code promo (facultatif)'), 'WELCOME10');
     await user.click(screen.getByRole('button', { name: /confirmer la commande/i }));
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/orders'));
@@ -197,11 +227,20 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
 
     await user.type(screen.getByPlaceholderText('Actuel'), 'faux');
-    await user.type(screen.getByPlaceholderText('Nouveau'), 'nouveauMDP1');
+    await user.type(screen.getByPlaceholderText(/^Nouveau/), 'nouveauMDP1');
     await user.type(screen.getAllByPlaceholderText('Confirmer')[0], 'nouveauMDP1');
     await user.click(screen.getByRole('button', { name: /modifier le mot de passe/i }));
 
     expect(await screen.findByText('Mot de passe actuel incorrect.')).toBeInTheDocument();
+  });
+
+  it('permet de se déconnecter', async () => {
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+
+    await user.click(screen.getByRole('button', { name: /déconnexion/i }));
+    expect(mockLogout).toHaveBeenCalled();
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
   });
 });
 

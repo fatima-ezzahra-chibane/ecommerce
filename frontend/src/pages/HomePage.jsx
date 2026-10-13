@@ -80,8 +80,8 @@ export default function HomePage() {
       {forYou.length > 0 && (
         <section>
           <SectionHeader
-            title={user ? 'Recommandé pour vous' : 'Populaires'}
-            subtitle="Suggestions intelligentes basées sur nos best-sellers"
+            title={user ? 'Recommandé pour vous' : 'Les mieux notés'}
+            subtitle={user ? 'Selon vos favoris et vos commandes' : 'Les produits préférés de nos clients'}
             linkTo="/shop"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-stretch">

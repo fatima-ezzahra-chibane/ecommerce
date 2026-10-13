@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
               <tr key={u.id} className="border-t">
                 <td className="p-3">{u.name}</td>
                 <td className="p-3">{u.email}</td>
-                <td className="p-3"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{u.role}</span></td>
+                <td className="p-3"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{u.role === 'admin' ? 'Admin' : 'Client'}</span></td>
                 <td className="p-3">{u.is_active ? 'Actif' : 'Inactif'}</td>
                 <td className="p-3 text-right">
                   {u.role !== 'admin' && (

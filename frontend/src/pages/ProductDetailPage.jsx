@@ -29,7 +29,9 @@ function Stars({ rating }) {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
   const [related, setRelated] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', imageFile: null });
   const [reviewPreview, setReviewPreview] = useState('');
@@ -38,10 +40,16 @@ export default function ProductDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const loadReviews = () => reviewService.list(id).then(({ data }) => setReviews(data.data || []));
+  const loadReviews = () => reviewService.list(id).then(({ data }) => {
+    setReviews(data.data || []);
+    setReviewsTotal(data.meta?.total ?? (data.data || []).length);
+  });
+
+  const reloadProduct = () => productService.get(id).then(({ data }) => setProduct(data.data));
 
   useEffect(() => {
-    productService.get(id).then(({ data }) => setProduct(data.data));
+    setNotFound(false);
+    reloadProduct().catch(() => setNotFound(true));
     loadReviews();
     aiService.productRecommendations(id).then(({ data }) => setRelated(data.data || []));
   }, [id]);
@@ -64,12 +72,30 @@ export default function ProductDetailPage() {
     setReviewPreview('');
     if (fileRef.current) fileRef.current.value = '';
     loadReviews();
-    productService.get(id).then(({ data }) => setProduct(data.data));
+    reloadProduct();
   };
+
+  const deleteReview = async () => {
+    if (!confirm('Supprimer votre avis ?')) return;
+    await reviewService.remove(id);
+    loadReviews();
+    reloadProduct();
+  };
+
+  if (notFound) {
+    return (
+      <div className="card-vivid max-w-lg mx-auto p-10 text-center">
+        <h1 className="text-xl font-bold">Produit introuvable</h1>
+        <p className="text-gray-500 mt-2 text-sm">Ce produit n&apos;existe pas ou n&apos;est plus disponible.</p>
+        <Link to="/shop" className="btn-vivid inline-block mt-6">Retour à la boutique</Link>
+      </div>
+    );
+  }
 
   if (!product) return <div className="text-center py-20 text-gray-400">Chargement...</div>;
 
   const promo = getPromo(product);
+  const outOfStock = Number(product.stock) <= 0;
 
   return (
     <div className="space-y-10">
@@ -103,10 +129,13 @@ export default function ProductDetailPage() {
               )}
             </div>
             <p className="text-gray-600 mt-4 leading-relaxed">{product.description}</p>
-            <p className="text-sm text-gray-400 mt-2">En stock : {product.stock} unités</p>
+            <p className={`text-sm mt-2 ${outOfStock ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+              {outOfStock ? 'Rupture de stock' : `En stock : ${product.stock} unités`}
+            </p>
             <button
               onClick={() => addToCart(product.id)}
-              className="btn-vivid mt-8 w-full sm:w-auto inline-flex items-center justify-center gap-2 !px-10 !py-4 text-base"
+              disabled={outOfStock}
+              className="btn-vivid disabled:opacity-40 disabled:cursor-not-allowed mt-8 w-full sm:w-auto inline-flex items-center justify-center gap-2 !px-10 !py-4 text-base"
             >
               <MaterialIcon name="shopping_bag" size={22} className="!text-white" />
               Ajouter au panier
@@ -116,7 +145,7 @@ export default function ProductDetailPage() {
       </div>
 
       <section className="card-vivid p-6 lg:p-8">
-        <h2 className="text-xl font-extrabold mb-6 text-[#475569]">Avis clients ({reviews.length})</h2>
+        <h2 className="text-xl font-extrabold mb-6 text-[#475569]">Avis clients ({reviewsTotal})</h2>
         {user && (
           <form onSubmit={submitReview} className="bg-[#f8f9fb] rounded-2xl p-5 mb-6 space-y-3 max-w-lg">
             <select
@@ -156,7 +185,14 @@ export default function ProductDetailPage() {
           {reviews.map((r) => (
             <div key={r.id} className="border-b border-gray-100 pb-5 last:border-0">
               <div className="flex justify-between items-center gap-4">
-                <span className="font-semibold">{r.user?.name}</span>
+                <span className="font-semibold">
+                  {r.user?.name}
+                  {user && r.user?.id === user.id && (
+                    <button type="button" onClick={deleteReview} className="ml-3 text-xs font-medium text-red-500 hover:underline">
+                      Supprimer mon avis
+                    </button>
+                  )}
+                </span>
                 <Stars rating={r.rating} />
               </div>
               {r.comment && <p className="text-gray-600 text-sm mt-2">{r.comment}</p>}

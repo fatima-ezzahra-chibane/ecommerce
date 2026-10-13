@@ -80,7 +80,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
         <Text style={styles.name}>{user.name}</Text>
         <Text style={styles.email}>{user.email}</Text>
-        <Text style={styles.role}>Rôle : {user.role}</Text>
+        <Text style={styles.role}>{user.role === 'admin' ? 'Administrateur' : 'Client'}</Text>
       </View>
 
       <TouchableOpacity style={styles.menuBtn} onPress={() => navigation.navigate('Orders')}>
@@ -129,7 +129,7 @@ export default function ProfileScreen({ navigation }) {
         />
         <TextInput
           style={styles.input}
-          placeholder="Nouveau mot de passe"
+          placeholder="Nouveau mot de passe (min. 8)"
           secureTextEntry
           value={password.password}
           onChangeText={(v) => setPassword({ ...password, password: v })}

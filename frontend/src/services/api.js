@@ -31,6 +31,14 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Token expiré ou révoqué (désactivation, nouveau mot de passe) : on termine la session côté client
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
+      localStorage.removeItem('token');
+      window.dispatchEvent(new Event('auth:expired'));
+      notifyToast('Session expirée. Veuillez vous reconnecter.', 'error');
+      return Promise.reject(error);
+    }
+
     if (!error.config?.skipGlobalToast) {
       const data = error.response?.data;
       let message = data?.message;

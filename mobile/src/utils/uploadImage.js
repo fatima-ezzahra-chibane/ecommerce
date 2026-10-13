@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../config/api';
+import { notifyAuthExpired } from '../services/api';
 
 function formatApiError(data) {
   if (data?.errors) {
@@ -78,6 +79,7 @@ export async function postMultipart(path, formData, options = {}) {
     }
 
     if (result.status < 200 || result.status >= 300) {
+      if (result.status === 401 && token) await notifyAuthExpired();
       const error = new Error(formatApiError(data));
       error.response = { data, status: result.status };
       throw error;
@@ -100,6 +102,7 @@ export async function postMultipart(path, formData, options = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 401 && token) await notifyAuthExpired();
     const error = new Error(formatApiError(data));
     error.response = { data, status: response.status };
     throw error;

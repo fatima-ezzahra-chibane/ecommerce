@@ -11,6 +11,9 @@ const STATUS = {
   cancelled: { label: 'Annulée', bg: '#fee2e2', color: '#991b1b' },
 };
 
+const PAYMENT_METHODS = { card: 'Carte bancaire', paypal: 'PayPal', cash: 'À la livraison' };
+const PAYMENT_STATUS = { pending: 'en attente', completed: 'payé', failed: 'non abouti', refunded: 'remboursé' };
+
 const FALLBACK = 'https://picsum.photos/seed/vivid-order/100/100';
 
 export default function OrderCard({ order }) {
@@ -67,7 +70,8 @@ export default function OrderCard({ order }) {
 
       {order.payment ? (
         <Text style={styles.payment}>
-          Paiement : {order.payment.payment_method} — {order.payment.status}
+          Paiement : {PAYMENT_METHODS[order.payment.payment_method] || order.payment.payment_method}
+          {' — '}{PAYMENT_STATUS[order.payment.status] || order.payment.status}
         </Text>
       ) : null}
     </View>

@@ -105,6 +105,8 @@ chmod +x postman/run-newman.sh
 ./postman/run-newman.sh
 ```
 
+Le parcours « 0. Smoke Test » (auth, rôles 401/403, panier et stock 422, commande, statut final verrouillé, recommandations, dashboard) s'exécute sur une base temporaire `ecommerce_newman`, supprimée à la fin : la base `ecommerce` n'est pas modifiée.
+
 ## Phase 1 — Consolidation (terminée)
 
 Git/GitHub, PHPUnit, Postman, documentation.
@@ -115,7 +117,7 @@ Git/GitHub, PHPUnit, Postman, documentation.
 |----------|--------|
 | Vitest | OK (CI) |
 | Cypress E2E checkout | OK (**local**) |
-| GitHub Actions | OK (PHPUnit + Vitest) |
+| GitHub Actions | OK (PHPUnit + Newman + Vitest + CV) |
 
 ### Vitest
 
@@ -133,7 +135,7 @@ npm run cy:run
 
 ### CI GitHub Actions
 
-À chaque push sur `main` : **PHPUnit + Vitest** (`.github/workflows/ci.yml`).  
+À chaque push sur `main` : **PHPUnit, Newman (smoke API sur SQLite), Vitest et tests du service CV** (`.github/workflows/ci.yml`).  
 Cypress reste volontairement **hors CI** (trop lourd sur le runner).
 
 ## Phase 3 — Mobile React Native (terminée)

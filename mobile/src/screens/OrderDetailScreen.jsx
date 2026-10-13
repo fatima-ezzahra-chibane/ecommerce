@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { orderService } from '../services';
 import OrderCard from '../components/OrderCard';
 import { PINK } from '../config/api';
@@ -12,11 +12,19 @@ export default function OrderDetailScreen({ route }) {
   useEffect(() => {
     orderService.get(id)
       .then(({ data }) => setOrder(data.data))
-      .catch(() => Alert.alert('Erreur', 'Commande introuvable'))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading || !order) {
+  if (!loading && !order) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.notFound}>Commande introuvable</Text>
+      </View>
+    );
+  }
+
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={PINK} />
@@ -35,4 +43,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   content: { padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  notFound: { fontSize: 18, fontWeight: '700', color: '#6b7280' },
 });

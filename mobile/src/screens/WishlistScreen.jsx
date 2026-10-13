@@ -31,7 +31,11 @@ export default function WishlistScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => { if (user) load(); }, [user, load]);
+  useEffect(() => {
+    if (!user) return undefined;
+    load();
+    return navigation.addListener('focus', load);
+  }, [user, load, navigation]);
 
   if (!user) {
     return (
@@ -44,7 +48,11 @@ export default function WishlistScreen({ navigation }) {
   }
 
   const handleRemove = async (productId) => {
-    await remove(productId);
+    try {
+      await remove(productId);
+    } catch (err) {
+      Alert.alert('Erreur', err.response?.data?.message || 'Suppression impossible');
+    }
     await refreshIds();
     load();
   };
@@ -54,7 +62,7 @@ export default function WishlistScreen({ navigation }) {
       await addToCart(productId);
       Alert.alert('Panier', 'Produit ajouté au panier');
     } catch (err) {
-      Alert.alert('Erreur', err.response?.data?.message || 'Ajout impossible');
+      Alert.alert('Erreur', err.response?.data?.errors?.quantity?.[0] || err.response?.data?.message || 'Ajout impossible');
     }
   };
 

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -27,6 +27,17 @@ const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 const AdminCouponsPage = lazy(() => import('./pages/admin/AdminCouponsPage'));
+
+function NotFoundPage() {
+  return (
+    <div className="card-vivid max-w-lg mx-auto p-10 text-center">
+      <p className="text-5xl font-extrabold text-[#ff4d8d]">404</p>
+      <h1 className="text-xl font-bold mt-4">Page introuvable</h1>
+      <p className="text-gray-500 mt-2 text-sm">Cette page n&apos;existe pas ou n&apos;est plus disponible.</p>
+      <Link to="/shop" className="btn-vivid inline-block mt-6">Retour à la boutique</Link>
+    </div>
+  );
+}
 
 function PageLoader() {
   return (
@@ -67,6 +78,7 @@ export default function App() {
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="coupons" element={<AdminCouponsPage />} />
                   </Route>
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
             </Suspense>

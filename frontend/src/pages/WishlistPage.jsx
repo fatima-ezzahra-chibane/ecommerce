@@ -51,6 +51,7 @@ export default function WishlistPage() {
               product={item.product}
               onAddCart={addToCart}
               onAddWishlist={() => remove(item.product_id)}
+              inWishlist
             />
           ))}
         </div>

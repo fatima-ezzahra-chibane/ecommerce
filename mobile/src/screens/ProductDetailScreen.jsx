@@ -22,6 +22,8 @@ export default function ProductDetailScreen({ route, navigation }) {
   const { id } = route.params;
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [notFound, setNotFound] = useState(false);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', imageAsset: null });
@@ -30,27 +32,34 @@ export default function ProductDetailScreen({ route, navigation }) {
   const { user } = useAuth();
   const { toggle, isWishlisted } = useWishlist();
 
-  const loadReviews = () => reviewService.list(id).then(({ data }) => setReviews(data.data || []));
+  const loadReviews = () => reviewService.list(id)
+    .then(({ data }) => {
+      setReviews(data.data || []);
+      setReviewsTotal(data.meta?.total ?? (data.data || []).length);
+    })
+    .catch(() => {});
 
   useEffect(() => {
     productService.get(id)
       .then(({ data }) => setProduct(data.data))
-      .catch(() => Alert.alert('Erreur', 'Produit introuvable'))
+      .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
     loadReviews();
-    aiService.productRecommendations(id).then(({ data }) => setRelated(data.data || []));
+    aiService.productRecommendations(id)
+      .then(({ data }) => setRelated(data.data || []))
+      .catch(() => {});
   }, [id]);
 
-  const handleAdd = async () => {
+  const handleAdd = async (productId = product.id) => {
     if (!user) {
       navigation.navigate('Login');
       return;
     }
     try {
-      await addToCart(product.id);
+      await addToCart(productId);
       Alert.alert('Panier', 'Produit ajouté');
     } catch (err) {
-      Alert.alert('Erreur', err.response?.data?.message || 'Ajout impossible');
+      Alert.alert('Erreur', err.response?.data?.errors?.quantity?.[0] || err.response?.data?.message || 'Ajout impossible');
     }
   };
 
@@ -102,6 +111,38 @@ export default function ProductDetailScreen({ route, navigation }) {
     }
   };
 
+  const deleteReview = () => {
+    Alert.alert('Supprimer votre avis ?', '', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await reviewService.remove(id);
+            await loadReviews();
+            const { data } = await productService.get(id);
+            setProduct(data.data);
+          } catch (err) {
+            Alert.alert('Erreur', err.response?.data?.message || 'Suppression impossible');
+          }
+        },
+      },
+    ]);
+  };
+
+  if (notFound) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.notFoundTitle}>Produit introuvable</Text>
+        <Text style={styles.notFoundText}>Ce produit n&apos;existe pas ou n&apos;est plus disponible.</Text>
+        <TouchableOpacity style={styles.linkBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.linkText}>Retour</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (loading || !product) {
     return (
       <View style={styles.center}>
@@ -113,6 +154,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   const imageUri = resolveMediaUrl(product.image) || FALLBACK;
   const promo = getPromo(product);
   const wishlisted = isWishlisted(product.id);
+  const outOfStock = Number(product.stock) <= 0;
 
   return (
     <ScrollView style={styles.container}>
@@ -142,9 +184,15 @@ export default function ProductDetailScreen({ route, navigation }) {
         <Text style={styles.price}>{formatPrice(product.price)}</Text>
         {promo && <Text style={styles.oldPrice}>{formatPrice(promo.original)}</Text>}
         <Text style={styles.desc}>{product.description || 'Aucune description.'}</Text>
-        <Text style={styles.stock}>En stock : {product.stock} unités</Text>
+        <Text style={[styles.stock, outOfStock && styles.outOfStock]}>
+          {outOfStock ? 'Rupture de stock' : `En stock : ${product.stock} unités`}
+        </Text>
 
-        <TouchableOpacity style={styles.btn} onPress={handleAdd}>
+        <TouchableOpacity
+          style={[styles.btn, outOfStock && styles.btnDisabled]}
+          onPress={() => handleAdd()}
+          disabled={outOfStock}
+        >
           <Ionicons name="bag-handle-outline" size={20} color="#fff" />
           <Text style={styles.btnText}>Ajouter au panier</Text>
         </TouchableOpacity>
@@ -154,7 +202,7 @@ export default function ProductDetailScreen({ route, navigation }) {
       </View>
 
       <View style={styles.reviewsSection}>
-        <Text style={styles.reviewsTitle}>Avis clients ({reviews.length})</Text>
+        <Text style={styles.reviewsTitle}>Avis clients ({reviewsTotal})</Text>
 
         {user && (
           <View style={styles.reviewForm}>
@@ -201,6 +249,11 @@ export default function ProductDetailScreen({ route, navigation }) {
               <Text style={styles.reviewAuthor}>{r.user?.name || 'Client'}</Text>
               <Stars rating={r.rating} size={14} />
             </View>
+            {user && r.user?.id === user.id ? (
+              <TouchableOpacity onPress={deleteReview}>
+                <Text style={styles.deleteReview}>Supprimer mon avis</Text>
+              </TouchableOpacity>
+            ) : null}
             {r.comment ? <Text style={styles.reviewComment}>{r.comment}</Text> : null}
             {r.image ? (
               <Image source={{ uri: resolveMediaUrl(r.image) }} style={styles.reviewImg} />
@@ -235,7 +288,9 @@ export default function ProductDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  notFoundTitle: { fontSize: 20, fontWeight: '800', color: '#111' },
+  notFoundText: { color: '#6b7280', marginTop: 8, textAlign: 'center' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', height: 300, backgroundColor: '#f3f4f6' },
   promoBadge: {
@@ -269,6 +324,7 @@ const styles = StyleSheet.create({
   oldPrice: { fontSize: 16, color: '#9ca3af', textDecorationLine: 'line-through', marginTop: 2 },
   desc: { marginTop: 16, lineHeight: 22, color: '#374151' },
   stock: { marginTop: 12, color: '#6b7280' },
+  outOfStock: { color: '#dc2626', fontWeight: '700' },
   btn: {
     backgroundColor: PINK,
     padding: 16,
@@ -279,6 +335,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  btnDisabled: { opacity: 0.4 },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   linkBtn: { alignItems: 'center', marginTop: 12 },
   linkText: { color: PINK, fontWeight: '600' },
@@ -315,6 +372,7 @@ const styles = StyleSheet.create({
   reviewCard: { borderBottomWidth: 1, borderColor: '#e5e7eb', paddingBottom: 16, marginBottom: 16 },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   reviewAuthor: { fontWeight: '700', color: '#111' },
+  deleteReview: { color: '#dc2626', fontSize: 12, fontWeight: '600', marginTop: 4 },
   reviewComment: { color: '#6b7280', marginTop: 8, lineHeight: 20 },
   reviewImg: { width: 100, height: 100, borderRadius: 12, marginTop: 8 },
   noReviews: { color: '#9ca3af', textAlign: 'center', paddingVertical: 16 },

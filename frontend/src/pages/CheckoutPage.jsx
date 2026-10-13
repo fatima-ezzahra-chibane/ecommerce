@@ -27,7 +27,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-3xl font-extrabold mb-8">Checkout</h1>
+      <h1 className="text-3xl font-extrabold mb-8">Finaliser la commande</h1>
       <form onSubmit={submit} className="card-vivid p-8 space-y-5">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Adresse de livraison</label>
@@ -45,7 +45,7 @@ export default function CheckoutPage() {
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Code promo</label>
-          <input className="input-vivid !rounded-2xl" placeholder="WELCOME10"
+          <input className="input-vivid !rounded-2xl" placeholder="Code promo (facultatif)"
             value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value })} />
         </div>
         <button type="submit" disabled={loading} className="btn-vivid w-full !py-4">

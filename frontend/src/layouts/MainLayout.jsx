@@ -7,6 +7,7 @@ import MaterialIcon from '../components/MaterialIcon';
 import MobileNav from '../components/MobileNav';
 import SearchField from '../components/SearchField';
 import WhatsAppButton from '../components/WhatsAppButton';
+import { getWhatsAppUrl } from '../config/whatsapp';
 
 export default function MainLayout() {
   const { user, logout, isAdmin } = useAuth();
@@ -124,7 +125,7 @@ export default function MainLayout() {
 
       <footer className="bg-[#f3f3f5] mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
             <div>
               <Link to="/" className="inline-block mb-4">
                 <span className="text-xl font-extrabold text-[#ff4d8d]">Vivid</span>
@@ -136,26 +137,17 @@ export default function MainLayout() {
             <div>
               <h4 className="font-bold text-gray-900 mb-4">Boutique</h4>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link to="/shop" className="hover:text-[#ff4d8d]">Nouveautés</Link></li>
-                <li><Link to="/shop?sort=price_desc" className="hover:text-[#ff4d8d]">Best-sellers</Link></li>
-                <li><Link to="/shop" className="hover:text-[#ff4d8d]">Promotions</Link></li>
+                <li><Link to="/shop?sort=latest" className="hover:text-[#ff4d8d]">Nouveautés</Link></li>
+                <li><Link to="/shop?sort=price_asc" className="hover:text-[#ff4d8d]">Petits prix</Link></li>
+                <li><Link to="/shop?sort=price_desc" className="hover:text-[#ff4d8d]">Haut de gamme</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-gray-900 mb-4">Aide</h4>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><span className="cursor-default">Livraison</span></li>
-                <li><span className="cursor-default">Retours</span></li>
-                <li><span className="cursor-default">Contact</span></li>
+                <li><Link to="/orders" className="hover:text-[#ff4d8d]">Suivre mes commandes</Link></li>
+                <li><a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer" className="hover:text-[#ff4d8d]">Contact (WhatsApp)</a></li>
               </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900 mb-4">Newsletter</h4>
-              <p className="text-sm text-gray-500 mb-3">-10% sur votre première commande.</p>
-              <form onSubmit={(e) => e.preventDefault()} className="flex gap-2">
-                <input type="email" placeholder="Votre email" className="input-vivid flex-1 !py-2.5 text-sm" />
-                <button type="submit" className="btn-vivid !px-4 !py-2.5 text-sm shrink-0">OK</button>
-              </form>
             </div>
           </div>
           <p className="text-center text-sm text-gray-400 mt-12 pt-8 border-t border-gray-200">

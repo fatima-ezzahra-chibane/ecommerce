@@ -34,6 +34,44 @@ jobs:
           SESSION_DRIVER: array
           QUEUE_CONNECTION: sync
 
+  api:
+    name: API (Newman smoke)
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/backend/database/newman.sqlite
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          coverage: none
+
+      - name: Prepare Laravel
+        working-directory: backend
+        run: |
+          composer install --no-interaction --prefer-dist
+          cp .env.example .env
+          php artisan key:generate --force
+          touch "$DB_DATABASE"
+          php artisan migrate --seed --force
+
+      - name: Start API
+        working-directory: backend
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/api/v1/categories >/dev/null && exit 0; sleep 1; done
+          cat /tmp/serve.log; exit 1
+
+      - name: Run Newman
+        run: |
+          npx --yes newman run postman/Vivid-Ecommerce.postman_collection.json \
+            -e postman/Vivid-Local.postman_environment.json \
+            --env-var "base_url=http://127.0.0.1:8000/api/v1" \
+            --folder "0. Smoke Test (Runner)"
+
   frontend:
     name: Vitest
     runs-on: ubuntu-latest

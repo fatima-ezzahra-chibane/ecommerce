@@ -105,7 +105,7 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerTintColor: PINK }}>
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Produit' }} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Commande' }} />
         <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: 'Mes commandes' }} />
         <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Ma commande' }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Connexion' }} />

@@ -3,21 +3,28 @@ import { Link } from 'react-router-dom';
 import { orderService } from '../services';
 import PageHeader from '../components/PageHeader';
 import OrderCard from '../components/OrderCard';
+import Pagination from '../components/Pagination';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     orderService
-      .list()
-      .then(({ data }) => setOrders(data.data || []))
+      .list({ page })
+      .then(({ data }) => {
+        setOrders(data.data || []);
+        setMeta(data.meta || null);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader title="Mes commandes" subtitle={`${orders.length} commande(s)`} />
+      <PageHeader title="Mes commandes" subtitle={`${meta?.total ?? orders.length} commande(s)`} />
 
       {loading && (
         <div className="text-center py-20 text-gray-400">Chargement...</div>
@@ -30,6 +37,8 @@ export default function OrdersPage() {
           ))}
         </div>
       )}
+
+      <Pagination meta={meta} onPage={setPage} />
 
       {!loading && !orders.length && (
         <div className="card-vivid p-12 text-center text-gray-500">

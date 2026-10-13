@@ -12,6 +12,7 @@ export default function ProductCard({ product, onPress, onAddCart, onAddWishlist
   const imageUri = resolveMediaUrl(product.image) || FALLBACK;
   const rating = product.average_rating ? Number(product.average_rating) : null;
   const promo = getPromo(product);
+  const outOfStock = Number(product.stock) <= 0;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -44,9 +45,11 @@ export default function ProductCard({ product, onPress, onAddCart, onAddWishlist
         )}
         <Text style={styles.price}>{formatPrice(product.price)}</Text>
         {promo && <Text style={styles.oldPrice}>{formatPrice(promo.original)}</Text>}
+        {outOfStock && <Text style={styles.outOfStock}>Rupture de stock</Text>}
         {onAddCart && (
           <TouchableOpacity
-            style={styles.cartBtn}
+            style={[styles.cartBtn, outOfStock && styles.cartBtnDisabled]}
+            disabled={outOfStock}
             onPress={(e) => {
               e?.stopPropagation?.();
               onAddCart(product.id);
@@ -118,5 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
   },
+  cartBtnDisabled: { opacity: 0.4 },
   cartBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  outOfStock: { fontSize: 12, color: '#dc2626', fontWeight: '600', marginTop: 2 },
 });

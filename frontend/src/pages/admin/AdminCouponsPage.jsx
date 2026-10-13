@@ -83,6 +83,9 @@ export default function AdminCouponsPage() {
             </p>
             <p className="text-xs text-gray-400 mt-1">
               Expire : {c.expiration_date ? new Date(c.expiration_date).toLocaleDateString('fr-FR') : 'Jamais'}
+              {c.expiration_date && new Date(c.expiration_date) < new Date() && (
+                <span className="ml-2 font-semibold text-red-500">Expiré</span>
+              )}
             </p>
           </div>
         ))}

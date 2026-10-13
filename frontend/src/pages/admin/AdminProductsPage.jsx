@@ -167,7 +167,7 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="p-3">{formatPrice(p.price)}</td>
                   <td className="p-3">{p.stock}</td>
-                  <td className="p-3"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{p.status}</span></td>
+                  <td className="p-3"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{p.status === 'active' ? 'Actif' : 'Inactif'}</span></td>
                   <td className="p-3 text-right space-x-2">
                     <button type="button" onClick={() => openForm(p)} className="text-[#ff4d8d]">Modifier</button>
                     <button type="button" onClick={() => remove(p.id)} className="text-red-500">Suppr.</button>

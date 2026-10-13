@@ -5,6 +5,10 @@ import Pagination from '../../components/Pagination';
 
 const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 const LABELS = { pending: 'En attente', processing: 'En cours', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée' };
+// Statuts définitifs côté API : une commande livrée ou annulée ne change plus
+const FINAL = ['delivered', 'cancelled'];
+const PAYMENT_METHODS = { card: 'Carte', paypal: 'PayPal', cash: 'Espèces à la livraison' };
+const PAYMENT_STATUS = { pending: 'En attente', completed: 'Encaissé', failed: 'Non abouti', refunded: 'Remboursé' };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -21,8 +25,13 @@ export default function AdminOrdersPage() {
   useEffect(() => { load(page); }, [page]);
 
   const changeStatus = async (id, status) => {
-    await adminService.updateOrderStatus(id, status);
-    load(page);
+    if (status === 'cancelled'
+      && !confirm('Annuler cette commande ?\nLe stock sera restitué et le paiement remboursé. Action définitive.')) return;
+    try {
+      await adminService.updateOrderStatus(id, status);
+    } finally {
+      load(page);
+    }
   };
 
   return (
@@ -42,9 +51,16 @@ export default function AdminOrdersPage() {
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-sm">Statut :</span>
               <select value={order.status} onChange={(e) => changeStatus(order.id, e.target.value)}
-                className="border rounded-lg px-2 py-1 text-sm">
+                disabled={FINAL.includes(order.status)}
+                className="border rounded-lg px-2 py-1 text-sm disabled:bg-gray-50 disabled:text-gray-500">
                 {STATUSES.map((s) => <option key={s} value={s}>{LABELS[s]}</option>)}
               </select>
+              {order.payment && (
+                <span className="text-xs text-gray-500">
+                  Paiement : {PAYMENT_METHODS[order.payment.payment_method] || order.payment.payment_method}
+                  {' — '}{PAYMENT_STATUS[order.payment.status] || order.payment.status}
+                </span>
+              )}
             </div>
             {order.items?.length > 0 && (
               <ul className="mt-3 text-sm text-gray-600 border-t pt-3">

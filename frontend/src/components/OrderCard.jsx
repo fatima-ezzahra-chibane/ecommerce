@@ -10,6 +10,9 @@ const STATUS = {
   cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800' },
 };
 
+const PAYMENT_METHODS = { card: 'Carte bancaire', paypal: 'PayPal', cash: 'À la livraison' };
+const PAYMENT_STATUS = { pending: 'en attente', completed: 'payé', failed: 'non abouti', refunded: 'remboursé' };
+
 export default function OrderCard({ order, showDetailLink = false }) {
   const st = STATUS[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-800' };
 
@@ -74,7 +77,8 @@ export default function OrderCard({ order, showDetailLink = false }) {
 
       {order.payment && (
         <p className="text-sm text-gray-500 border-t border-gray-100 pt-4">
-          Paiement : {order.payment.payment_method} — {order.payment.status}
+          Paiement : {PAYMENT_METHODS[order.payment.payment_method] || order.payment.payment_method}
+          {' — '}{PAYMENT_STATUS[order.payment.status] || order.payment.status}
         </p>
       )}
 

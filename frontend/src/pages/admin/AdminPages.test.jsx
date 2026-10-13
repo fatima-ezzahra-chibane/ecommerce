@@ -133,6 +133,24 @@ describe('AdminOrdersPage', () => {
     await user.selectOptions(screen.getByRole('combobox'), 'shipped');
     expect(adminService.updateOrderStatus).toHaveBeenCalledWith(3, 'shipped');
   });
+
+  it('verrouille les statuts finaux et confirme l’annulation', async () => {
+    adminService.orders.mockResolvedValue({ data: { data: [
+      { id: 4, status: 'delivered', total_price: 100, created_at: '2026-10-09T10:00:00Z', shipping_address: 'Rabat', items: [] },
+      { id: 5, status: 'pending', total_price: 50, created_at: '2026-10-09T10:00:00Z', shipping_address: 'Fès', items: [] },
+    ], meta: { current_page: 1, last_page: 1 } } });
+    window.confirm.mockReturnValueOnce(false);
+    const user = userEvent.setup();
+    render(<AdminOrdersPage />);
+
+    await screen.findByText('Commande #4');
+    const [delivered, pending] = screen.getAllByRole('combobox');
+    expect(delivered).toBeDisabled();
+
+    await user.selectOptions(pending, 'cancelled');
+    expect(window.confirm).toHaveBeenCalled();
+    expect(adminService.updateOrderStatus).not.toHaveBeenCalled();
+  });
 });
 
 describe('AdminUsersPage', () => {

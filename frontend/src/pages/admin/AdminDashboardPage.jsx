@@ -46,7 +46,7 @@ export default function AdminDashboardPage() {
     { label: 'Produits', value: stats.products_count, link: '/admin/products', color: 'bg-blue-50 text-blue-700' },
     { label: 'Clients', value: stats.users_count, link: '/admin/users', color: 'bg-green-50 text-green-700' },
     { label: 'Commandes', value: stats.orders_count, link: '/admin/orders', color: 'bg-purple-50 text-purple-700' },
-    { label: "Chiffre d'affaires", value: formatPrice(stats.revenue), link: '/admin/orders', color: 'bg-amber-50 text-amber-700' },
+    { label: "Chiffre d'affaires encaissé", value: formatPrice(stats.revenue), link: '/admin/orders', color: 'bg-amber-50 text-amber-700' },
   ];
 
   const statusEntries = Object.entries(stats.orders_by_status || {});
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
   const barData = {
     labels: monthly.map((m) => MONTHS[m.month] || `M${m.month}`),
     datasets: [{
-      label: 'Ventes (DH)',
+      label: 'Encaissements (DH)',
       data: monthly.map((m) => Number(m.total)),
       backgroundColor: '#ff4d8d',
       borderRadius: 8,
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
           )}
         </div>
         <div className="card-vivid p-5">
-          <h2 className="font-semibold mb-4">Ventes mensuelles ({new Date().getFullYear()})</h2>
+          <h2 className="font-semibold mb-4">Encaissements mensuels ({new Date().getFullYear()})</h2>
           {monthly.length ? (
             <div className="h-64">
               <Bar data={barData} options={chartOptions} />

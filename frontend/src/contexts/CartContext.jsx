@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { cartService } from '../services';
 import { useAuth } from './AuthContext';
+import { notifyToast } from '../utils/toastBus';
 
 const CartContext = createContext(null);
 
@@ -20,9 +21,19 @@ export function CartProvider({ children }) {
     }
   }, [user]);
 
+  /** Retourne true si l'article a été ajouté ; les erreurs API (stock, produit indisponible) sont affichées en toast. */
   const addToCart = async (productId, quantity = 1) => {
-    await cartService.add(productId, quantity);
+    if (!user) {
+      notifyToast('Connectez-vous pour ajouter au panier', 'error');
+      return false;
+    }
+    try {
+      await cartService.add(productId, quantity);
+    } catch {
+      return false;
+    }
     await refresh();
+    return true;
   };
 
   const itemCount = cart?.items?.reduce((sum, i) => sum + i.quantity, 0) ?? 0;

@@ -33,6 +33,7 @@ export const reviewService = {
     }
     return postMultipart(`/products/${productId}/reviews`, fd, { file, fileField: 'image' });
   },
+  remove: (productId) => api.delete(`/products/${productId}/reviews`),
 };
 
 export const categoryService = {
@@ -53,7 +54,7 @@ export const wishlistService = {
 };
 
 export const orderService = {
-  list: () => api.get('/orders'),
+  list: (params) => api.get('/orders', { params }),
   create: (data) => api.post('/orders', data),
   get: (id) => api.get(`/orders/${id}`),
 };

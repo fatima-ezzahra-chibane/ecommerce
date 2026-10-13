@@ -48,7 +48,7 @@ export default function CheckoutScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Checkout</Text>
+      <Text style={styles.header}>Finaliser la commande</Text>
 
       {cart?.items?.length > 0 && (
         <View style={styles.summary}>
@@ -97,7 +97,7 @@ export default function CheckoutScreen({ navigation }) {
         style={styles.input}
         value={coupon}
         onChangeText={setCoupon}
-        placeholder="WELCOME10"
+        placeholder="Code promo"
         autoCapitalize="characters"
       />
 

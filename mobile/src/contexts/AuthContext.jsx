@@ -1,12 +1,25 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../services';
+import { setAuthExpiredHandler } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userRef = useRef(null);
+  userRef.current = user;
+
+  useEffect(() => {
+    setAuthExpiredHandler(() => {
+      if (!userRef.current) return;
+      setUser(null);
+      Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+    });
+    return () => setAuthExpiredHandler(null);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -19,7 +32,7 @@ export function AuthProvider({ children }) {
         const { data } = await authService.me();
         setUser(data.user);
       } catch {
-        await AsyncStorage.removeItem('token');
+        // 401 : token supprimé par l'intercepteur ; erreur réseau : on le garde pour le prochain lancement
       } finally {
         setLoading(false);
       }
@@ -41,13 +54,13 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    setUser(null);
     try {
       await authService.logout();
     } catch {
       /* ignore */
     }
     await AsyncStorage.removeItem('token');
-    setUser(null);
   };
 
   const refreshUser = useCallback(async () => {

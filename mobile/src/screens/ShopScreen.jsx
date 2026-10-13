@@ -71,7 +71,7 @@ export default function ShopScreen({ navigation }) {
       await addToCart(productId);
       Alert.alert('Panier', 'Produit ajouté au panier');
     } catch (err) {
-      Alert.alert('Erreur', err.response?.data?.message || 'Ajout impossible');
+      Alert.alert('Erreur', err.response?.data?.errors?.quantity?.[0] || err.response?.data?.message || 'Ajout impossible');
     }
   };
 
