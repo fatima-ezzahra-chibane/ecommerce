@@ -17,7 +17,11 @@ export default function AdminUsersPage() {
   useEffect(() => { load(page); }, [page]);
 
   const toggle = async (id) => {
-    await adminService.toggleUser(id);
+    try {
+      await adminService.toggleUser(id);
+    } catch {
+      /* toast via interceptor */
+    }
     load(page);
   };
 

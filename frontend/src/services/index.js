@@ -2,7 +2,7 @@ import api from './api';
 
 export const authService = {
   register: (data) => api.post('/register', data),
-  login: (data) => api.post('/login', data),
+  login: (data) => api.post('/login', data, { skipErrorToast: true }),
   logout: () => api.post('/logout'),
   me: () => api.get('/me'),
   forgotPassword: (data) => api.post('/forgot-password', data),

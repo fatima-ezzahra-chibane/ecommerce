@@ -12,21 +12,29 @@ export default function AdminCouponsPage() {
 
   const save = async (e) => {
     e.preventDefault();
-    await adminService.createCoupon({
-      ...form,
-      discount: parseFloat(form.discount),
-      usage_limit: form.usage_limit ? parseInt(form.usage_limit, 10) : null,
-      min_order_amount: form.min_order_amount ? parseFloat(form.min_order_amount) : 0,
-      expiration_date: form.expiration_date || null,
-    });
-    setForm(null);
-    load();
+    try {
+      await adminService.createCoupon({
+        ...form,
+        discount: parseFloat(form.discount),
+        usage_limit: form.usage_limit ? parseInt(form.usage_limit, 10) : null,
+        min_order_amount: form.min_order_amount ? parseFloat(form.min_order_amount) : 0,
+        expiration_date: form.expiration_date || null,
+      });
+      setForm(null);
+      load();
+    } catch {
+      /* toast via interceptor */
+    }
   };
 
   const remove = async (id) => {
     if (!confirm('Supprimer ce coupon ?')) return;
-    await adminService.deleteCoupon(id);
-    load();
+    try {
+      await adminService.deleteCoupon(id);
+      load();
+    } catch {
+      /* toast via interceptor */
+    }
   };
 
   return (

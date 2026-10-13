@@ -3,9 +3,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { PINK } from '../config/api';
 
 const BADGES = [
-  { icon: 'rocket-outline', title: 'Livraison rapide', desc: 'Expédition sous 48h', color: '#fff0f5', iconColor: PINK },
-  { icon: 'lock-closed-outline', title: 'Paiement sécurisé', desc: '100% protégé', color: '#fffbeb', iconColor: '#d97706' },
-  { icon: 'refresh-outline', title: 'Retours faciles', desc: "30 jours pour changer d'avis", color: '#f0f9ff', iconColor: '#0284c7' },
+  { icon: 'cash-outline', title: 'Paiement à la livraison', desc: 'Ou par carte et PayPal', color: '#fff0f5', iconColor: PINK },
+  { icon: 'cube-outline', title: 'Suivi de commande', desc: 'De la validation à la livraison', color: '#fffbeb', iconColor: '#d97706' },
+  { icon: 'logo-whatsapp', title: 'Support WhatsApp', desc: 'Une question ? Écrivez-nous', color: '#f0f9ff', iconColor: '#0284c7' },
 ];
 
 export default function TrustBadges() {

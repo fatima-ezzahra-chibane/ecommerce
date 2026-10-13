@@ -80,6 +80,24 @@ class AdminManagementTest extends TestCase
             ->assertJsonValidationErrors(['category_id', 'name', 'price', 'stock']);
     }
 
+    public function test_original_price_must_be_above_price(): void
+    {
+        $category = Category::factory()->create();
+
+        $this->api('POST', '/admin/products', [
+            'category_id' => $category->id, 'name' => 'Lampe', 'price' => 300, 'original_price' => 250, 'stock' => 1,
+        ])->assertUnprocessable()->assertJsonValidationErrors(['original_price']);
+
+        $product = Product::factory()->create(['price' => 100, 'original_price' => 150]);
+
+        $this->api('PUT', "/admin/products/{$product->id}", ['original_price' => 90])
+            ->assertUnprocessable()->assertJsonValidationErrors(['original_price']);
+        $this->api('PUT', "/admin/products/{$product->id}", ['price' => 200])
+            ->assertUnprocessable()->assertJsonValidationErrors(['price']);
+        $this->api('PUT', "/admin/products/{$product->id}", ['price' => 120])->assertOk();
+        $this->api('PUT', "/admin/products/{$product->id}", ['price' => 200, 'original_price' => null])->assertOk();
+    }
+
     public function test_admin_updates_product(): void
     {
         $product = Product::factory()->create(['price' => 100]);

@@ -35,6 +35,13 @@ describe('intercepteur API', () => {
     expect(toast).toHaveBeenCalledWith('Identifiants invalides.', 'error');
   });
 
+  it('laisse la page gérer l’erreur si skipErrorToast est demandé', async () => {
+    const error = { config: { headers: {}, skipErrorToast: true }, response: { status: 422, data: { message: 'Identifiants invalides.' } } };
+
+    await expect(onError(error)).rejects.toBe(error);
+    expect(toast).not.toHaveBeenCalled();
+  });
+
   it('affiche la première erreur de validation (422)', async () => {
     const error = { config: { headers: {} }, response: { status: 422, data: { errors: { quantity: ['Stock insuffisant.'] } } } };
 

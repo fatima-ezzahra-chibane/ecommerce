@@ -16,7 +16,7 @@ export default function ProfileScreen({ navigation }) {
     password: '',
     password_confirmation: '',
   });
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -37,13 +37,13 @@ export default function ProfileScreen({ navigation }) {
 
   const saveProfile = async () => {
     setSaving(true);
-    setMsg('');
+    setMsg(null);
     try {
       const { data } = await profileService.update(profile);
       await refreshUser();
-      setMsg(data.message || 'Profil mis à jour');
+      setMsg({ text: data.message || 'Profil mis à jour', ok: true });
     } catch (err) {
-      setMsg(err.response?.data?.message || 'Erreur mise à jour profil');
+      setMsg({ text: err.response?.data?.message || 'Erreur mise à jour profil', ok: false });
     } finally {
       setSaving(false);
     }
@@ -51,13 +51,13 @@ export default function ProfileScreen({ navigation }) {
 
   const savePassword = async () => {
     setSaving(true);
-    setMsg('');
+    setMsg(null);
     try {
       const { data } = await profileService.updatePassword(password);
-      setMsg(data.message || 'Mot de passe modifié');
+      setMsg({ text: data.message || 'Mot de passe modifié', ok: true });
       setPassword({ current_password: '', password: '', password_confirmation: '' });
     } catch (err) {
-      setMsg(err.response?.data?.message || 'Erreur mot de passe');
+      setMsg({ text: err.response?.data?.message || 'Erreur mot de passe', ok: false });
     } finally {
       setSaving(false);
     }
@@ -95,7 +95,7 @@ export default function ProfileScreen({ navigation }) {
         <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
       </TouchableOpacity>
 
-      {msg ? <Text style={styles.msg}>{msg}</Text> : null}
+      {msg ? <Text style={[styles.msg, !msg.ok && styles.msgError]}>{msg.text}</Text> : null}
 
       <View style={styles.formCard}>
         <Text style={styles.formTitle}>Informations</Text>
@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
   },
+  msgError: { color: '#991b1b', backgroundColor: '#fee2e2' },
   formCard: {
     backgroundColor: '#fff',
     padding: 16,

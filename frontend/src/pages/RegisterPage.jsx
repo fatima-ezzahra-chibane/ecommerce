@@ -32,7 +32,7 @@ export default function RegisterPage() {
             value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input type="email" placeholder="Email" required className="input-vivid !rounded-2xl"
             value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input type="password" placeholder="Mot de passe" required className="input-vivid !rounded-2xl"
+          <input type="password" placeholder="Mot de passe (min. 8)" required minLength={8} className="input-vivid !rounded-2xl"
             value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           <input type="password" placeholder="Confirmer" required className="input-vivid !rounded-2xl"
             value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} />

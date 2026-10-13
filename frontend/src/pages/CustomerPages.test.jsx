@@ -145,7 +145,7 @@ describe('RegisterPage', () => {
 
     await user.type(screen.getByPlaceholderText('Nom'), 'Fatima');
     await user.type(screen.getByPlaceholderText('Email'), 'f@test.com');
-    await user.type(screen.getByPlaceholderText('Mot de passe'), 'password1');
+    await user.type(screen.getByPlaceholderText(/^Mot de passe/), 'password1');
     await user.type(screen.getByPlaceholderText('Confirmer'), 'password1');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -162,8 +162,8 @@ describe('RegisterPage', () => {
 
     await user.type(screen.getByPlaceholderText('Nom'), 'F');
     await user.type(screen.getByPlaceholderText('Email'), 'f@test.com');
-    await user.type(screen.getByPlaceholderText('Mot de passe'), 'x');
-    await user.type(screen.getByPlaceholderText('Confirmer'), 'x');
+    await user.type(screen.getByPlaceholderText(/^Mot de passe/), 'password1');
+    await user.type(screen.getByPlaceholderText('Confirmer'), 'password2');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
     await waitFor(() => expect(mockRegister).toHaveBeenCalled());

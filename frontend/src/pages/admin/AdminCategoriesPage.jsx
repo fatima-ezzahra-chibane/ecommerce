@@ -11,16 +11,24 @@ export default function AdminCategoriesPage() {
 
   const save = async (e) => {
     e.preventDefault();
-    if (form.id) await adminService.updateCategory(form.id, { name: form.name, description: form.description });
-    else await adminService.createCategory({ name: form.name, description: form.description });
-    setForm(null);
-    load();
+    try {
+      if (form.id) await adminService.updateCategory(form.id, { name: form.name, description: form.description });
+      else await adminService.createCategory({ name: form.name, description: form.description });
+      setForm(null);
+      load();
+    } catch {
+      /* toast via interceptor */
+    }
   };
 
   const remove = async (id) => {
     if (!confirm('Supprimer cette catégorie ?')) return;
-    await adminService.deleteCategory(id);
-    load();
+    try {
+      await adminService.deleteCategory(id);
+      load();
+    } catch {
+      /* toast via interceptor */
+    }
   };
 
   return (

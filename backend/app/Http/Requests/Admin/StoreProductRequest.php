@@ -18,7 +18,7 @@ class StoreProductRequest extends FormRequest
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'original_price' => 'nullable|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0|gt:price',
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string',
             'status' => 'in:active,inactive',
@@ -34,6 +34,7 @@ class StoreProductRequest extends FormRequest
             'price.required' => 'Le prix est requis.',
             'price.min' => 'Le prix ne peut pas être négatif.',
             'original_price.min' => 'Le prix original ne peut pas être négatif.',
+            'original_price.gt' => 'Le prix barré doit être supérieur au prix de vente.',
             'stock.required' => 'Le stock est requis.',
             'stock.min' => 'Le stock ne peut pas être négatif.',
         ];

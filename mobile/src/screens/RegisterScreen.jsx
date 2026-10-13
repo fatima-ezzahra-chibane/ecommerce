@@ -37,7 +37,7 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={(v) => setForm({ ...form, email: v })} />
       <TextInput style={styles.input} placeholder="Téléphone (optionnel)" value={form.phone}
         onChangeText={(v) => setForm({ ...form, phone: v })} />
-      <TextInput style={styles.input} placeholder="Mot de passe" secureTextEntry
+      <TextInput style={styles.input} placeholder="Mot de passe (min. 8)" secureTextEntry
         value={form.password} onChangeText={(v) => setForm({ ...form, password: v })} />
       <TextInput style={styles.input} placeholder="Confirmer le mot de passe" secureTextEntry
         value={form.password_confirmation}

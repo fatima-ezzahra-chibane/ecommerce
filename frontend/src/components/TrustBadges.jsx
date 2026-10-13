@@ -2,21 +2,21 @@ import MaterialIcon from './MaterialIcon';
 
 const BADGES = [
   {
-    icon: 'rocket_launch',
-    title: 'Livraison rapide',
-    desc: 'Expédition sous 48h',
+    icon: 'payments',
+    title: 'Paiement à la livraison',
+    desc: 'Ou par carte et PayPal',
     ring: 'bg-rose-50 text-[#ff4d8d]',
   },
   {
-    icon: 'lock',
-    title: 'Paiement sécurisé',
-    desc: '100% protégé',
+    icon: 'local_shipping',
+    title: 'Suivi de commande',
+    desc: 'De la validation à la livraison',
     ring: 'bg-amber-50 text-amber-600',
   },
   {
-    icon: 'published_with_changes',
-    title: 'Retours faciles',
-    desc: "30 jours pour changer d'avis",
+    icon: 'chat',
+    title: 'Support WhatsApp',
+    desc: 'Une question ? Écrivez-nous',
     ring: 'bg-sky-50 text-sky-600',
   },
 ];

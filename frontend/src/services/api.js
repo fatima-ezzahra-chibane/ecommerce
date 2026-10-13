@@ -39,7 +39,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (!error.config?.skipGlobalToast) {
+    if (!error.config?.skipGlobalToast && !error.config?.skipErrorToast) {
       const data = error.response?.data;
       let message = data?.message;
       if (!message && data?.errors) {
