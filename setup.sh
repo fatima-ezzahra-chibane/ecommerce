@@ -6,16 +6,9 @@ if docker info >/dev/null 2>&1; then DC=(docker compose)
 elif sudo docker info >/dev/null 2>&1; then DC=(sudo docker compose)
 else echo "Docker inaccessible."; exit 1; fi
 
-echo "==> Démarrage de tous les services..."
-"${DC[@]}" up -d --build backend nginx frontend mysql phpmyadmin cv-service
-
-echo "==> Attente MySQL..."
-for i in $(seq 1 36); do
-  "${DC[@]}" exec mysql mysqladmin ping -h 127.0.0.1 -uroot -proot --silent 2>/dev/null && break
-  [ "$i" -eq 36 ] && { echo "MySQL ne répond pas."; exit 1; }
-  sleep 5
-done
-echo "MySQL prêt."
+# Le backend dépend de mysql et cv-service « healthy » : au retour de up, les deux sont prêts.
+echo "==> Démarrage de tous les services (premier lancement : plusieurs minutes)..."
+"${DC[@]}" up -d --build
 
 [ -f backend/.env ] || cp backend/.env.example backend/.env
 
@@ -33,18 +26,8 @@ fi
 "${DC[@]}" exec backend php artisan storage:link 2>/dev/null || true
 "${DC[@]}" exec backend chown -R www-data:www-data storage bootstrap/cache
 
-echo "==> Attente service Computer Vision..."
-for i in $(seq 1 24); do
-  "${DC[@]}" exec backend php -r "
-    \$c = @file_get_contents('http://cv-service:8090/health');
-    exit(\$c ? 0 : 1);
-  " 2>/dev/null && break
-  [ "$i" -eq 24 ] && { echo "CV service indisponible (optionnel)."; break; }
-  sleep 2
-done
-
 echo "==> Indexation images produits (MobileNetV2 ONNX)..."
-"${DC[@]}" exec backend php artisan products:index-visuals --fresh 2>/dev/null || echo "Index CV ignoré (service non prêt)."
+"${DC[@]}" exec backend php artisan products:index-visuals --fresh 2>/dev/null || echo "Indexation CV impossible (images inaccessibles ?). Relancer : docker compose exec backend php artisan products:index-visuals --fresh"
 
 OWNER="${SUDO_USER:-$(whoami)}"
 # storage/ reste à www-data (écriture des logs, du cache et des uploads par PHP-FPM)
@@ -55,7 +38,7 @@ echo "=== E-Commerce Platform ==="
 echo "Frontend  : http://localhost:5173"
 echo "API       : http://localhost:8080/api/v1"
 echo "CV Service: http://localhost:8090/health"
-echo "PhpMyAdmin: http://localhost:8082  (user: ecommerce / secret)"
+echo "PhpMyAdmin: http://localhost:8082  (user: ecommerce / secret, accès local uniquement)"
 echo ""
 echo "Comptes demo:"
 echo "  Admin  : admin@shop.com / password"

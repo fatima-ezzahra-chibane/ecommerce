@@ -81,6 +81,15 @@ Root : `root` / `root`.
 docker compose exec mysql mysql -u ecommerce -psecret ecommerce
 ```
 
+### Accès réseau (sécurité)
+
+PhpMyAdmin (8082), MySQL (3307) et le service CV (8090) écoutent uniquement sur **127.0.0.1** : accessibles depuis la machine qui fait tourner Docker, pas depuis le réseau (Wi-Fi, téléphone, autre PC). L'API (8080) et le front (5173) restent ouverts pour l'application mobile.
+
+Depuis une autre machine (ex. Windows hôte d'une VM VirtualBox), deux options :
+
+- **Tunnel SSH (recommandé)** : `ssh -L 8082:127.0.0.1:8082 -L 3307:127.0.0.1:3307 utilisateur@IP_DE_LA_VM`, puis http://localhost:8082 sur l'hôte.
+- **Ouvrir les ports temporairement** : créer un fichier `.env` à la racine du projet contenant `DB_TOOLS_BIND=0.0.0.0`, puis `docker compose up -d mysql phpmyadmin`. Supprimer la ligne et relancer la même commande pour refermer.
+
 ## Comptes démo
 
 - **Admin** : `admin@shop.com` / `password`

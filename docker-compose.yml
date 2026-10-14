@@ -46,8 +46,9 @@ services:
   mysql:
     image: mysql:8.0
     container_name: ecommerce-mysql
+    # Outils BDD réservés à la machine hôte ; DB_TOOLS_BIND=0.0.0.0 dans .env (racine) pour les ouvrir au réseau
     ports:
-      - "3307:3306"
+      - "${DB_TOOLS_BIND:-127.0.0.1}:3307:3306"
     environment:
       MYSQL_DATABASE: ecommerce
       MYSQL_USER: ecommerce
@@ -66,7 +67,7 @@ services:
     image: phpmyadmin:5.2
     container_name: ecommerce-phpmyadmin
     ports:
-      - "8082:80"
+      - "${DB_TOOLS_BIND:-127.0.0.1}:8082:80"
     environment:
       PMA_HOST: mysql
       PMA_USER: ecommerce
