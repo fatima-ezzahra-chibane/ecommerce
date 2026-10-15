@@ -125,7 +125,6 @@ Git/GitHub, PHPUnit, Postman, documentation.
 | Livrable | Statut |
 |----------|--------|
 | Vitest | OK (CI) |
-| Cypress E2E checkout | OK (**local**) |
 | GitHub Actions | OK (PHPUnit + Newman + Vitest + CV) |
 
 ### Vitest
@@ -134,18 +133,9 @@ Git/GitHub, PHPUnit, Postman, documentation.
 cd frontend && npm ci --include=dev && npx vitest run
 ```
 
-### Cypress E2E (local — stack Docker up)
-
-```bash
-cd frontend
-npm ci --include=dev
-npm run cy:run
-```
-
 ### CI GitHub Actions
 
-À chaque push sur `main` : **PHPUnit, Newman (smoke API sur SQLite), Vitest et tests du service CV** (`.github/workflows/ci.yml`).  
-Cypress reste volontairement **hors CI** (trop lourd sur le runner).
+À chaque push sur `main` : **PHPUnit, Newman (smoke API sur SQLite), Vitest et tests du service CV** (`.github/workflows/ci.yml`).
 
 ## Phase 3 — Mobile React Native (terminée)
 
